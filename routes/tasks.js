@@ -212,9 +212,9 @@ function pollTaskResult(taskId, requestId) {
     return;
   }
 
-  const maxAttempts = 60;
+  const maxAttempts = 120;
   let attempts = 0;
-  console.log(`[Poll] 开始轮询: taskId=${taskId}, requestId=${requestId}, 最大尝试=${maxAttempts}次, 间隔3秒`);
+  console.log(`[Poll] 开始轮询: taskId=${taskId}, requestId=${requestId}, 最大尝试=${maxAttempts}次, 间隔5秒`);
 
   const interval = setInterval(async () => {
     attempts++;
@@ -260,7 +260,7 @@ function pollTaskResult(taskId, requestId) {
       console.error(`[Poll] 轮询异常: taskId=${taskId}, 第${attempts}次, 错误: ${err.message}`);
       // 继续轮询
     }
-  }, 3000);
+  }, 5000);
 }
 
 // 下载输出图片到本地
