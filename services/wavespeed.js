@@ -85,6 +85,39 @@ class WaveSpeedService {
     }
   }
 
+  // 上传图片到WaveSpeed CDN
+  async uploadImage(filePath) {
+    const url = `${this.baseUrl.replace('/api/v3', '')}/api/v3/media/upload/binary`;
+    const fs = require('fs');
+    const FormData = require('form-data');
+
+    console.log(`[WaveSpeed] 上传图片到CDN: ${filePath}`);
+
+    try {
+      const form = new FormData();
+      form.append('file', fs.createReadStream(filePath));
+
+      const response = await axios.post(url, form, {
+        headers: {
+          ...form.getHeaders(),
+          'Authorization': `Bearer ${this.getApiKey()}`
+        },
+        maxContentLength: 20 * 1024 * 1024,
+        maxBodyLength: 20 * 1024 * 1024
+      });
+
+      const downloadUrl = response.data?.data?.download_url || response.data?.data?.url;
+      console.log(`[WaveSpeed] 图片上传成功: ${downloadUrl ? downloadUrl.slice(0, 80) + '...' : '(无URL)'}`);
+      return downloadUrl;
+    } catch (err) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+      console.error(`[WaveSpeed] 图片上传失败: HTTP ${status}`);
+      console.error(`[WaveSpeed] 错误详情: ${JSON.stringify(data || err.message)}`);
+      throw err;
+    }
+  }
+
   // 查询任务结果
   async getTaskResult(requestId) {
     const url = `${this.baseUrl}/predictions/${requestId}/result`;

@@ -16,8 +16,20 @@ const state = {
   globalStats: {},
   uploadFiles: [],
   generating: false,
-  generateType: 'text-to-image'
+  generateType: 'text-to-image',
+  systemName: 'AI图片处理系统'
 };
+
+// 加载公开设置（系统名称等）
+async function loadPublicSettings() {
+  try {
+    const data = await api('GET', '/settings/public');
+    if (data.system_name) {
+      state.systemName = data.system_name;
+      document.title = state.systemName;
+    }
+  } catch (e) { /* 忽略 */ }
+}
 
 // ===== API 工具 =====
 async function api(method, url, data, isFormData = false) {
@@ -90,7 +102,7 @@ function renderAuth() {
   return `
     <div class="auth-container">
       <div class="auth-card">
-        <h1>AI图片处理系统</h1>
+        <h1>${state.systemName}</h1>
         <p class="subtitle">智能图片生成平台</p>
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="login">登录</button>
@@ -159,6 +171,7 @@ function bindAuthEvents() {
       localStorage.setItem('token', res.token);
       localStorage.setItem('user', JSON.stringify(res.user));
       showToast(mode === 'login' ? '登录成功' : '注册成功', 'success');
+      loadPublicSettings();
       render();
     } catch (err) {
       errEl.textContent = err.message;
@@ -179,7 +192,7 @@ function renderLayout() {
     <div class="app-layout">
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <h2>AI图片系统 <span class="role-badge">${isAdmin ? '管理员' : '用户'}</span></h2>
+          <h2>${state.systemName} <span class="role-badge">${isAdmin ? '管理员' : '用户'}</span></h2>
         </div>
         <nav class="sidebar-nav">
           <button class="nav-item ${state.currentPage === 'generate' ? 'active' : ''}" data-page="generate">
@@ -1176,6 +1189,8 @@ async function renderSettings(container) {
         system_name: document.getElementById('set-system-name').value,
         max_tasks_per_user_per_day: document.getElementById('set-max-tasks').value
       });
+      state.systemName = document.getElementById('set-system-name').value;
+      document.title = state.systemName;
       showToast('设置已保存', 'success');
     } catch (err) {
       showToast(err.message, 'error');
@@ -1294,4 +1309,5 @@ function formatDate(dateStr) {
 }
 
 // ===== 启动 =====
+loadPublicSettings();
 render();

@@ -160,19 +160,30 @@ router.post('/image-to-image', authMiddleware, upload.array('images', 14), async
     const taskId = taskResult.lastInsertRowid;
     console.log(`[Task] 任务记录已创建: taskId=${taskId}`);
 
-    // 调用WaveSpeed API - 需要完整的URL
-    const fullUrls = files.map(f => {
-      const host = req.get('host');
-      const protocol = req.protocol;
-      return `${protocol}://${host}${f.path.replace(/\\/g, '/').replace(/^.*uploads/, '/uploads')}`;
-    });
-    console.log(`[Task] 发送给WaveSpeed的图片URL: ${JSON.stringify(fullUrls)}`);
+    // 上传图片到WaveSpeed CDN获取公网URL
+    let cdnUrls = [];
+    try {
+      console.log(`[Task] 开始上传图片到WaveSpeed CDN...`);
+      for (let i = 0; i < files.length; i++) {
+        const filePath = files[i].path;
+        console.log(`[Task] 上传第 ${i + 1}/${files.length} 张图片: ${filePath}`);
+        const cdnUrl = await wavespeed.uploadImage(filePath);
+        cdnUrls.push(cdnUrl);
+      }
+      console.log(`[Task] 所有图片上传完成: ${JSON.stringify(cdnUrls.map(u => u?.slice(0, 60) + '...'))}`);
+    } catch (uploadErr) {
+      const errorMsg = uploadErr.response?.data?.message || uploadErr.message;
+      console.error(`[Task] 图片上传CDN失败: ${errorMsg}`);
+      run('UPDATE tasks SET status = ?, error = ? WHERE id = ?', ['failed', '图片上传失败: ' + errorMsg, taskId]);
+      return res.status(500).json({ error: '图片上传失败: ' + errorMsg });
+    }
 
+    // 调用WaveSpeed API - 使用CDN公网URL
     try {
       console.log(`[Task] 开始调用WaveSpeed图生图API...`);
       const apiResult = await wavespeed.imageToImage({
         prompt,
-        images: fullUrls,
+        images: cdnUrls,
         aspect_ratio: finalAspectRatio,
         resolution: finalResolution,
         output_format: finalOutputFormat,
