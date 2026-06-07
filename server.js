@@ -3,7 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const config = require('./config');
 const { getDb, migrateDb } = require('./db/database');
-const { run, queryAll } = require('./db/database');
+const { run, queryAll, queryOne } = require('./db/database');
+const { getMachineId } = require('./services/machineId');
+const { verifyLicenseKey } = require('./services/license');
 
 const app = express();
 
@@ -22,6 +24,33 @@ async function initApp() {
   dirs.forEach(dir => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   });
+
+  // 初始化license表
+  try {
+    run(`CREATE TABLE IF NOT EXISTS license (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      machine_id TEXT NOT NULL,
+      license_key TEXT NOT NULL,
+      type TEXT NOT NULL,
+      expire_date TEXT NOT NULL,
+      activated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+  } catch (e) { /* 忽略已存在的情况 */ }
+
+  // 启动时检查授权状态
+  const machineId = getMachineId();
+  const licenseRecord = queryOne('SELECT * FROM license WHERE machine_id = ?', [machineId]);
+  if (licenseRecord && licenseRecord.license_key) {
+    const result = verifyLicenseKey(machineId, licenseRecord.license_key);
+    if (result.valid) {
+      console.log(`[License] 系统已授权 | 机器ID: ${machineId} | ${result.message}`);
+    } else {
+      console.warn(`[License] 授权已失效 | 机器ID: ${machineId} | ${result.message}`);
+    }
+  } else {
+    console.warn(`[License] 系统未授权 | 机器ID: ${machineId}`);
+    console.warn(`[License] 请在页面中输入授权码激活系统`);
+  }
 }
 
 // 中间件
@@ -33,7 +62,33 @@ app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API路由
+// API路由 - 授权相关（无需授权检查）
+app.use('/api/license', require('./routes/license'));
+
+// 授权检查中间件（排除授权相关和公开接口）
+app.use('/api', (req, res, next) => {
+  // 授权相关接口和公开设置接口不需要检查授权
+  if (req.path.startsWith('/license/') || req.path === '/settings/public') {
+    return next();
+  }
+
+  try {
+    const machineId = getMachineId();
+    const licenseRecord = queryOne('SELECT * FROM license WHERE machine_id = ?', [machineId]);
+    if (licenseRecord && licenseRecord.license_key) {
+      const result = verifyLicenseKey(machineId, licenseRecord.license_key);
+      if (result.valid) {
+        return next();
+      }
+    }
+    return res.status(403).json({ error: '系统未授权，请先输入授权码', code: 'LICENSE_REQUIRED' });
+  } catch (err) {
+    console.error(`[License] 授权检查异常: ${err.message}`);
+    return next();
+  }
+});
+
+// 需要授权的API路由
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/stats', require('./routes/stats'));

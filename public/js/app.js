@@ -17,8 +17,128 @@ const state = {
   uploadFiles: [],
   generating: false,
   generateType: 'text-to-image',
-  systemName: 'AI图片处理系统'
+  systemName: 'AI图片处理系统',
+  authorized: true,  // 默认已授权，后续检查会更新
+  licenseInfo: null
 };
+
+// ===== 授权检查 =====
+async function checkLicense() {
+  try {
+    const res = await fetch('/api/license/status');
+    const data = await res.json();
+    state.authorized = data.authorized;
+    state.licenseInfo = data;
+    return data;
+  } catch (err) {
+    console.error('授权检查失败:', err);
+    state.authorized = false;
+    return { authorized: false, message: '授权检查失败' };
+  }
+}
+
+async function activateLicense(licenseKey) {
+  const res = await fetch('/api/license/activate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ licenseKey })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '激活失败');
+  return data;
+}
+
+// 显示授权弹窗
+function showLicenseModal() {
+  const machineId = state.licenseInfo?.machineId || '未知';
+
+  // 如果已存在弹窗则不重复创建
+  if (document.getElementById('license-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'license-modal';
+  modal.className = 'license-modal-overlay';
+  modal.innerHTML = `
+    <div class="license-modal">
+      <div class="license-icon">🔒</div>
+      <h2>系统授权验证</h2>
+      <p class="license-desc">本系统需要授权才能使用，请联系管理员获取授权码</p>
+      <div class="license-machine-id">
+        <label>机器ID</label>
+        <div class="machine-id-box">
+          <code id="machine-id-text">${machineId}</code>
+          <button class="btn-copy-id" onclick="copyMachineId()" title="复制">复制</button>
+        </div>
+      </div>
+      <div class="license-input-group">
+        <label>授权码</label>
+        <input type="text" id="license-key-input" placeholder="请输入授权码" autocomplete="off">
+      </div>
+      <div id="license-error" class="license-error"></div>
+      <button class="btn btn-primary license-activate-btn" id="license-activate">激活授权</button>
+      <p class="license-hint">请将机器ID发送给管理员，获取对应的授权码后输入激活</p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // 绑定激活按钮
+  document.getElementById('license-activate').addEventListener('click', async () => {
+    const key = document.getElementById('license-key-input').value.trim();
+    const errEl = document.getElementById('license-error');
+    if (!key) {
+      errEl.textContent = '请输入授权码';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('license-activate');
+    btn.disabled = true;
+    btn.textContent = '激活中...';
+
+    try {
+      const result = await activateLicense(key);
+      state.authorized = true;
+      state.licenseInfo = {
+        authorized: true,
+        type: result.type,
+        typeName: result.typeName,
+        expireDate: result.expireDate,
+        message: result.message
+      };
+      modal.remove();
+      showToast('授权激活成功！' + result.message, 'success');
+      render();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '激活授权';
+    }
+  });
+
+  // 回车提交
+  document.getElementById('license-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('license-activate').click();
+  });
+}
+
+function copyMachineId() {
+  const text = document.getElementById('machine-id-text')?.textContent;
+  if (text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('机器ID已复制', 'success');
+    }).catch(() => {
+      // 降级方案
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('机器ID已复制', 'success');
+    });
+  }
+}
 
 // 加载公开设置（系统名称等）
 async function loadPublicSettings() {
@@ -87,6 +207,15 @@ function navigate(page) {
 // ===== 主渲染 =====
 function render() {
   const app = document.getElementById('app');
+
+  // 未授权时只显示登录/注册页面，但弹出授权弹窗
+  if (!state.authorized) {
+    app.innerHTML = renderAuth();
+    bindAuthEvents();
+    showLicenseModal();
+    return;
+  }
+
   if (!state.token || !state.user) {
     app.innerHTML = renderAuth();
     bindAuthEvents();
@@ -1066,6 +1195,7 @@ async function renderUsers(container) {
             <th>ID</th>
             <th>用户名</th>
             <th>角色</th>
+            <th>状态</th>
             <th>总任务数</th>
             <th>已完成</th>
             <th>注册时间</th>
@@ -1074,35 +1204,198 @@ async function renderUsers(container) {
         </thead>
         <tbody>
           ${state.users.map(u => `
-            <tr>
+            <tr class="${u.status === 'disabled' ? 'user-disabled-row' : ''}">
               <td>#${u.id}</td>
               <td>${escapeHtml(u.username)}</td>
               <td><span class="role-badge ${u.role}">${u.role === 'admin' ? '管理员' : '用户'}</span></td>
+              <td><span class="status-badge ${u.status === 'disabled' ? 'disabled' : 'enabled'}">${u.status === 'disabled' ? '已禁用' : '正常'}</span></td>
               <td>${u.total_tasks || 0}</td>
               <td>${u.completed_tasks || 0}</td>
               <td>${formatDate(u.created_at)}</td>
-              <td>
-                ${u.role !== 'admin' && u.id !== state.user.id ? `<button class="btn btn-sm btn-danger delete-user-btn" data-id="${u.id}">删除</button>` : '-'}
+              <td class="action-cell">
+                <button class="btn btn-sm btn-info view-user-btn" data-id="${u.id}" title="查看使用详情">查看</button>
+                ${u.role !== 'admin' && u.id !== state.user.id ? `
+                  ${u.status !== 'disabled'
+                    ? `<button class="btn btn-sm btn-warning disable-user-btn" data-id="${u.id}">禁用</button>`
+                    : `<button class="btn btn-sm btn-success enable-user-btn" data-id="${u.id}">启用</button>`
+                  }
+                ` : ''}
               </td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     </div>
+    <div id="user-detail-modal"></div>
   `;
 
-  container.querySelectorAll('.delete-user-btn').forEach(btn => {
+  // 查看用户详情
+  container.querySelectorAll('.view-user-btn').forEach(btn => {
+    btn.addEventListener('click', () => showUserDetail(btn.dataset.id));
+  });
+
+  // 禁用用户
+  container.querySelectorAll('.disable-user-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('确定删除此用户及其所有任务？')) return;
+      if (!confirm('确定禁用此用户？禁用后该用户将无法登录')) return;
       try {
-        await api('DELETE', `/auth/users/${btn.dataset.id}`);
-        showToast('用户已删除', 'success');
+        await api('PUT', `/auth/users/${btn.dataset.id}/status`, { status: 'disabled' });
+        showToast('用户已禁用', 'success');
         renderUsers(container);
       } catch (err) {
         showToast(err.message, 'error');
       }
     });
   });
+
+  // 启用用户
+  container.querySelectorAll('.enable-user-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        await api('PUT', `/auth/users/${btn.dataset.id}/status`, { status: 'enabled' });
+        showToast('用户已启用', 'success');
+        renderUsers(container);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+  });
+}
+
+// 显示用户使用详情弹窗
+async function showUserDetail(userId) {
+  const modalEl = document.getElementById('user-detail-modal');
+  if (!modalEl) return;
+
+  modalEl.innerHTML = `<div class="modal-overlay"><div class="modal-content user-detail-modal"><div class="loading-spinner"></div><p>加载中...</p></div></div>`;
+
+  try {
+    const data = await api('GET', `/auth/users/${userId}/details`);
+    const { user, stats, recentTasks } = data;
+
+    const statusMap = { pending: '等待中', processing: '处理中', completed: '已完成', failed: '失败', timeout: '超时' };
+    const typeMap = { 'text-to-image': '文生图', 'image-to-image': '图生图' };
+
+    modalEl.innerHTML = `
+      <div class="modal-overlay" id="user-detail-overlay">
+        <div class="modal-content user-detail-modal">
+          <div class="modal-header">
+            <h2>${escapeHtml(user.username)} 的使用详情</h2>
+            <button class="modal-close" id="close-user-detail">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-info-row">
+              <span class="detail-label">角色</span>
+              <span class="role-badge ${user.role}">${user.role === 'admin' ? '管理员' : '用户'}</span>
+              <span class="detail-label" style="margin-left:24px">状态</span>
+              <span class="status-badge ${user.status === 'disabled' ? 'disabled' : 'enabled'}">${user.status === 'disabled' ? '已禁用' : '正常'}</span>
+              <span class="detail-label" style="margin-left:24px">注册时间</span>
+              <span>${formatDate(user.created_at)}</span>
+            </div>
+
+            <div class="detail-stats-grid">
+              <div class="detail-stat-card">
+                <div class="stat-number">${stats.total}</div>
+                <div class="stat-label">总任务</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="stat-number">${stats.today}</div>
+                <div class="stat-label">今日任务</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="stat-number">${stats.byStatus.find(s => s.status === 'completed')?.count || 0}</div>
+                <div class="stat-label">已完成</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="stat-number">${stats.byStatus.find(s => s.status === 'failed')?.count || 0}</div>
+                <div class="stat-label">失败</div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>任务类型分布</h3>
+              <div class="detail-bars">
+                ${stats.byType.map(t => `
+                  <div class="detail-bar-row">
+                    <span class="bar-label">${typeMap[t.type] || t.type}</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:${stats.total > 0 ? (t.count / stats.total * 100) : 0}%"></div></div>
+                    <span class="bar-count">${t.count}</span>
+                  </div>
+                `).join('') || '<p class="no-data">暂无数据</p>'}
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>画质分布</h3>
+              <div class="detail-bars">
+                ${stats.byResolution.map(t => `
+                  <div class="detail-bar-row">
+                    <span class="bar-label">${t.resolution}</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:${stats.total > 0 ? (t.count / stats.total * 100) : 0}%"></div></div>
+                    <span class="bar-count">${t.count}</span>
+                  </div>
+                `).join('') || '<p class="no-data">暂无数据</p>'}
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>画面比例分布</h3>
+              <div class="detail-bars">
+                ${stats.byAspectRatio.map(t => `
+                  <div class="detail-bar-row">
+                    <span class="bar-label">${t.aspect_ratio}</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:${stats.total > 0 ? (t.count / stats.total * 100) : 0}%"></div></div>
+                    <span class="bar-count">${t.count}</span>
+                  </div>
+                `).join('') || '<p class="no-data">暂无数据</p>'}
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>最近任务（最新20条）</h3>
+              <div style="overflow-x:auto">
+                <table class="user-table detail-task-table">
+                  <thead>
+                    <tr>
+                      <th>类型</th>
+                      <th>提示词</th>
+                      <th>画面比例</th>
+                      <th>画质</th>
+                      <th>状态</th>
+                      <th>时间</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${recentTasks.map(t => `
+                      <tr>
+                        <td>${typeMap[t.type] || t.type}</td>
+                        <td class="prompt-cell" title="${escapeHtml(t.prompt)}">${escapeHtml(t.prompt.length > 30 ? t.prompt.substring(0, 30) + '...' : t.prompt)}</td>
+                        <td>${t.aspect_ratio}</td>
+                        <td>${t.resolution}</td>
+                        <td><span class="task-status-badge ${t.status}">${statusMap[t.status] || t.status}</span></td>
+                        <td>${formatDate(t.created_at)}</td>
+                      </tr>
+                    `).join('') || '<tr><td colspan="6" style="text-align:center">暂无任务</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 关闭弹窗
+    document.getElementById('close-user-detail').addEventListener('click', () => {
+      modalEl.innerHTML = '';
+    });
+    document.getElementById('user-detail-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'user-detail-overlay') modalEl.innerHTML = '';
+    });
+  } catch (err) {
+    modalEl.innerHTML = '';
+    showToast('获取用户详情失败: ' + err.message, 'error');
+  }
 }
 
 // ===== 系统设置（管理员） =====
@@ -1309,5 +1602,12 @@ function formatDate(dateStr) {
 }
 
 // ===== 启动 =====
-loadPublicSettings();
-render();
+(async function init() {
+  // 先检查授权状态
+  const licenseData = await checkLicense();
+  if (licenseData.authorized) {
+    // 已授权，正常加载
+    loadPublicSettings();
+  }
+  render();
+})();

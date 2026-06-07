@@ -67,6 +67,15 @@ function migrateDb() {
       saveDb();
       console.log('[Migration] tasks 表约束更新完成');
     }
+
+    // 添加用户 status 字段（启用/禁用）
+    const userTableInfo = queryAll("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'");
+    if (userTableInfo.length > 0 && !userTableInfo[0].sql.includes('status')) {
+      console.log('[Migration] 添加 users 表 status 字段...');
+      db.run(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'enabled' CHECK(status IN ('enabled', 'disabled'))`);
+      saveDb();
+      console.log('[Migration] users 表 status 字段添加完成');
+    }
   } catch (err) {
     console.error('[Migration] 迁移失败:', err.message);
   }
