@@ -3,3 +3,13 @@ data/
 uploads/
 *.db
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+build/
+dist/
+*.spec
+*.egg-info/
