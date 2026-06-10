@@ -13,3 +13,7 @@ build/
 dist/
 *.spec
 *.egg-info/
+
+# Autostart scripts (local only)
+setup-autostart.bat
+remove-autostart.bat

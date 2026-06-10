@@ -559,6 +559,14 @@ async function handleGenerate() {
     return;
   }
 
+  // 在重新渲染前先读取所有参数值，避免渲染后select被重置
+  const params = {
+    aspect_ratio: document.getElementById('gen-aspect').value,
+    resolution: document.getElementById('gen-resolution').value,
+    output_format: document.getElementById('gen-format').value,
+    enable_web_search: document.getElementById('gen-web-search').value === 'true'
+  };
+
   state.generating = true;
   renderGenerate(document.getElementById('page-content'));
 
@@ -566,20 +574,17 @@ async function handleGenerate() {
     if (state.generateType === 'text-to-image') {
       const res = await api('POST', '/tasks/text-to-image', {
         prompt,
-        aspect_ratio: document.getElementById('gen-aspect').value,
-        resolution: document.getElementById('gen-resolution').value,
-        output_format: document.getElementById('gen-format').value,
-        enable_web_search: document.getElementById('gen-web-search').value === 'true'
+        ...params
       });
       showToast('任务已提交，正在生成...', 'info');
       pollTaskStatus(res.taskId);
     } else {
       const formData = new FormData();
       formData.append('prompt', prompt);
-      formData.append('aspect_ratio', document.getElementById('gen-aspect').value);
-      formData.append('resolution', document.getElementById('gen-resolution').value);
-      formData.append('output_format', document.getElementById('gen-format').value);
-      formData.append('enable_web_search', document.getElementById('gen-web-search').value);
+      formData.append('aspect_ratio', params.aspect_ratio);
+      formData.append('resolution', params.resolution);
+      formData.append('output_format', params.output_format);
+      formData.append('enable_web_search', params.enable_web_search);
       state.uploadFiles.forEach(f => formData.append('images', f));
 
       const res = await api('POST', '/tasks/image-to-image', formData, true);
