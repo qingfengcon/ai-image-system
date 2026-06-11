@@ -34,10 +34,10 @@ async function getDb() {
   return db;
 }
 
-// 数据库迁移：确保 tasks 表支持 timeout 状态
+// 数据库迁移：确保表结构最新
 function migrateDb() {
   try {
-    // 检查是否已有 timeout 状态的 CHECK 约束
+    // 检查 tasks 表是否需要添加 timeout 状态
     const tableInfo = queryAll("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'");
     if (tableInfo.length > 0 && !tableInfo[0].sql.includes('timeout')) {
       console.log('[Migration] 更新 tasks 表约束，添加 timeout 状态...');
@@ -69,13 +69,42 @@ function migrateDb() {
     }
 
     // 添加用户 status 字段（启用/禁用）
-    const userTableInfo = queryAll("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'");
-    if (userTableInfo.length > 0 && !userTableInfo[0].sql.includes('status')) {
-      console.log('[Migration] 添加 users 表 status 字段...');
-      db.run(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'enabled' CHECK(status IN ('enabled', 'disabled'))`);
-      saveDb();
-      console.log('[Migration] users 表 status 字段添加完成');
+    try {
+      const userTableInfo = queryAll("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'");
+      if (userTableInfo.length > 0 && !userTableInfo[0].sql.includes('status')) {
+        console.log('[Migration] 添加 users 表 status 字段...');
+        db.run(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'enabled'`);
+        saveDb();
+        console.log('[Migration] users 表 status 字段添加完成');
+      }
+    } catch (e) {
+      console.error('[Migration] users status 字段迁移异常:', e.message);
     }
+
+    // 确保 license 表存在
+    try {
+      const licenseTable = queryAll("SELECT name FROM sqlite_master WHERE type='table' AND name='license'");
+      if (licenseTable.length === 0) {
+        console.log('[Migration] 创建 license 表...');
+        db.run(`
+          CREATE TABLE license (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            machine_id TEXT NOT NULL,
+            license_key TEXT NOT NULL,
+            type TEXT DEFAULT 'standard',
+            expire_date TEXT,
+            activated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(machine_id)
+          )
+        `);
+        saveDb();
+        console.log('[Migration] license 表创建完成');
+      }
+    } catch (e) {
+      console.error('[Migration] license 表迁移异常:', e.message);
+    }
+
+    console.log('[Migration] 数据库迁移完成');
   } catch (err) {
     console.error('[Migration] 迁移失败:', err.message);
   }

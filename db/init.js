@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
   role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user')),
+  status TEXT DEFAULT 'enabled' CHECK(status IN ('enabled', 'disabled')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -39,6 +40,16 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('default_aspect_ratio', '1:1
 INSERT OR IGNORE INTO settings (key, value) VALUES ('default_output_format', 'png');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('max_tasks_per_user_per_day', '100');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('system_name', 'AI图片处理系统');
+
+CREATE TABLE IF NOT EXISTS license (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  machine_id TEXT NOT NULL,
+  license_key TEXT NOT NULL,
+  type TEXT DEFAULT 'standard',
+  expire_date TEXT,
+  activated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(machine_id)
+);
 `;
 
 module.exports = initSQL;
