@@ -1487,6 +1487,13 @@ async function renderSettings(container) {
         system_name: document.getElementById('set-system-name').value,
         max_tasks_per_user_per_day: document.getElementById('set-max-tasks').value
       });
+      // 更新state中的设置，使其他页面实时生效
+      state.settings.wavespeed_api_key = document.getElementById('set-api-key').value;
+      state.settings.default_resolution = document.getElementById('set-resolution').value;
+      state.settings.default_aspect_ratio = document.getElementById('set-aspect').value;
+      state.settings.default_output_format = document.getElementById('set-format').value;
+      state.settings.system_name = document.getElementById('set-system-name').value;
+      state.settings.max_tasks_per_user_per_day = document.getElementById('set-max-tasks').value;
       state.systemName = document.getElementById('set-system-name').value;
       document.title = state.systemName;
       showToast('设置已保存', 'success');
