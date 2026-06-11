@@ -429,29 +429,29 @@ function renderGenerate(container) {
           <div class="form-group">
             <label>画面比例</label>
             <select id="gen-aspect">
-              <option value="1:1">1:1 正方形</option>
-              <option value="16:9">16:9 宽屏</option>
-              <option value="9:16">9:16 竖屏</option>
-              <option value="4:3">4:3 标准</option>
-              <option value="3:4">3:4 竖版</option>
-              <option value="3:2">3:2 横版</option>
-              <option value="2:3">2:3 竖版</option>
-              <option value="4:5">4:5</option>
-              <option value="5:4">5:4</option>
-              <option value="21:9">21:9 超宽</option>
-              <option value="1:4">1:4 长条</option>
-              <option value="4:1">4:1 横条</option>
-              <option value="1:8">1:8 极窄</option>
-              <option value="8:1">8:1 极宽</option>
+              <option value="1:1" ${state.settings.default_aspect_ratio === '1:1' ? 'selected' : ''}>1:1 正方形</option>
+              <option value="16:9" ${state.settings.default_aspect_ratio === '16:9' ? 'selected' : ''}>16:9 宽屏</option>
+              <option value="9:16" ${state.settings.default_aspect_ratio === '9:16' ? 'selected' : ''}>9:16 竖屏</option>
+              <option value="4:3" ${state.settings.default_aspect_ratio === '4:3' ? 'selected' : ''}>4:3 标准</option>
+              <option value="3:4" ${state.settings.default_aspect_ratio === '3:4' ? 'selected' : ''}>3:4 竖版</option>
+              <option value="3:2" ${state.settings.default_aspect_ratio === '3:2' ? 'selected' : ''}>3:2 横版</option>
+              <option value="2:3" ${state.settings.default_aspect_ratio === '2:3' ? 'selected' : ''}>2:3 竖版</option>
+              <option value="4:5" ${state.settings.default_aspect_ratio === '4:5' ? 'selected' : ''}>4:5</option>
+              <option value="5:4" ${state.settings.default_aspect_ratio === '5:4' ? 'selected' : ''}>5:4</option>
+              <option value="21:9" ${state.settings.default_aspect_ratio === '21:9' ? 'selected' : ''}>21:9 超宽</option>
+              <option value="1:4" ${state.settings.default_aspect_ratio === '1:4' ? 'selected' : ''}>1:4 长条</option>
+              <option value="4:1" ${state.settings.default_aspect_ratio === '4:1' ? 'selected' : ''}>4:1 横条</option>
+              <option value="1:8" ${state.settings.default_aspect_ratio === '1:8' ? 'selected' : ''}>1:8 极窄</option>
+              <option value="8:1" ${state.settings.default_aspect_ratio === '8:1' ? 'selected' : ''}>8:1 极宽</option>
             </select>
           </div>
           <div class="form-group">
             <label>画质</label>
             <select id="gen-resolution">
-              <option value="0.5k">0.5K 快速预览</option>
-              <option value="1k" selected>1K 标准</option>
-              <option value="2k">2K 高清</option>
-              <option value="4k">4K 超高清</option>
+              <option value="0.5k" ${state.settings.default_resolution === '0.5k' ? 'selected' : ''}>0.5K 快速预览</option>
+              <option value="1k" ${state.settings.default_resolution === '1k' ? 'selected' : ''}>1K 标准</option>
+              <option value="2k" ${state.settings.default_resolution === '2k' ? 'selected' : ''}>2K 高清</option>
+              <option value="4k" ${state.settings.default_resolution === '4k' ? 'selected' : ''}>4K 超高清</option>
             </select>
           </div>
         </div>
@@ -460,8 +460,8 @@ function renderGenerate(container) {
           <div class="form-group">
             <label>输出格式</label>
             <select id="gen-format">
-              <option value="png">PNG</option>
-              <option value="jpeg">JPEG</option>
+              <option value="png" ${state.settings.default_output_format === 'png' ? 'selected' : ''}>PNG</option>
+              <option value="jpeg" ${state.settings.default_output_format === 'jpeg' ? 'selected' : ''}>JPEG</option>
             </select>
           </div>
           <div class="form-group">
