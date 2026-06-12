@@ -148,6 +148,11 @@ async function loadPublicSettings() {
       state.systemName = data.system_name;
       document.title = state.systemName;
     }
+    // 加载默认参数到state.settings
+    if (!state.settings) state.settings = {};
+    if (data.default_resolution) state.settings.default_resolution = data.default_resolution;
+    if (data.default_aspect_ratio) state.settings.default_aspect_ratio = data.default_aspect_ratio;
+    if (data.default_output_format) state.settings.default_output_format = data.default_output_format;
   } catch (e) { /* 忽略 */ }
 }
 

@@ -49,12 +49,18 @@ router.put('/', authMiddleware, adminMiddleware, (req, res) => {
   }
 });
 
-// 获取公开设置（不需要管理员权限）
+// 获取公开设置（不需要管理员权限，包含默认参数供前端使用）
 router.get('/public', (req, res) => {
   try {
     const systemName = queryOne('SELECT value FROM settings WHERE key = ?', ['system_name']);
+    const defaultResolution = queryOne('SELECT value FROM settings WHERE key = ?', ['default_resolution']);
+    const defaultAspect = queryOne('SELECT value FROM settings WHERE key = ?', ['default_aspect_ratio']);
+    const defaultFormat = queryOne('SELECT value FROM settings WHERE key = ?', ['default_output_format']);
     res.json({
-      system_name: systemName?.value || 'AI图片处理系统'
+      system_name: systemName?.value || 'AI图片处理系统',
+      default_resolution: defaultResolution?.value || '1k',
+      default_aspect_ratio: defaultAspect?.value || '1:1',
+      default_output_format: defaultFormat?.value || 'png'
     });
   } catch (err) {
     res.status(500).json({ error: '获取设置失败' });

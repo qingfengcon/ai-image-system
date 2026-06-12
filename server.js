@@ -51,6 +51,19 @@ async function initApp() {
     console.warn(`[License] 系统未授权 | 机器ID: ${machineId}`);
     console.warn(`[License] 请在页面中输入授权码激活系统`);
   }
+
+  // 启动时加载系统默认设置
+  const defaultKeys = ['default_resolution', 'default_aspect_ratio', 'default_output_format', 'system_name'];
+  const defaults = {};
+  defaultKeys.forEach(key => {
+    const row = queryOne('SELECT value FROM settings WHERE key = ?', [key]);
+    if (row) defaults[key] = row.value;
+  });
+  console.log(`[Settings] 系统默认设置已加载`);
+  console.log(`[Settings] 画面比例: ${defaults.default_aspect_ratio || '1:1'}`);
+  console.log(`[Settings] 分辨率: ${defaults.default_resolution || '1k'}`);
+  console.log(`[Settings] 输出格式: ${defaults.default_output_format || 'png'}`);
+  console.log(`[Settings] 系统名称: ${defaults.system_name || 'AI图片处理系统'}`);
 }
 
 // 中间件
