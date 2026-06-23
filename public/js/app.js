@@ -172,6 +172,15 @@ async function api(method, url, data, isFormData = false) {
     throw new Error('网络请求失败: ' + err.message);
   }
 
+  // Token过期或无效，清除登录状态
+  if (res.status === 401) {
+    state.token = '';
+    state.user = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    throw new Error('登录已过期，请重新登录');
+  }
+
   let json;
   try {
     json = await res.json();
