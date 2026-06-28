@@ -767,8 +767,11 @@ async function renderTasks(container) {
       </div>
       <div class="pagination">
         <button ${state.taskPage <= 1 ? 'disabled' : ''} id="prev-page">上一页</button>
-        <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">${state.taskPage} / ${totalPages || 1}</span>
         <button ${state.taskPage >= totalPages ? 'disabled' : ''} id="next-page">下一页</button>
+        <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">共 ${totalPages || 1} 页 / ${state.taskTotal} 条</span>
+        <select id="page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;">
+          ${Array.from({length: totalPages || 1}, (_, i) => `<option value="${i+1}" ${i+1 === state.taskPage ? 'selected' : ''}>第 ${i+1} 页</option>`).join('')}
+        </select>
       </div>
     `}
   `;
@@ -777,6 +780,7 @@ async function renderTasks(container) {
   document.getElementById('refresh-tasks')?.addEventListener('click', () => renderTasks(container));
   document.getElementById('prev-page')?.addEventListener('click', () => { state.taskPage--; renderTasks(container); });
   document.getElementById('next-page')?.addEventListener('click', () => { state.taskPage++; renderTasks(container); });
+  document.getElementById('page-jump')?.addEventListener('change', (e) => { state.taskPage = parseInt(e.target.value); renderTasks(container); });
 
   document.getElementById('filter-status')?.addEventListener('change', async (e) => {
     const type = document.getElementById('filter-type').value;
@@ -1166,8 +1170,11 @@ async function renderAllTasks(container) {
       </div>
       <div class="pagination">
         <button ${state.allTaskPage <= 1 ? 'disabled' : ''} id="admin-prev">上一页</button>
-        <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">${state.allTaskPage} / ${totalPages || 1}</span>
         <button ${state.allTaskPage >= totalPages ? 'disabled' : ''} id="admin-next">下一页</button>
+        <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">共 ${totalPages || 1} 页 / ${state.allTaskTotal} 条</span>
+        <select id="admin-page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;">
+          ${Array.from({length: totalPages || 1}, (_, i) => `<option value="${i+1}" ${i+1 === state.allTaskPage ? 'selected' : ''}>第 ${i+1} 页</option>`).join('')}
+        </select>
       </div>
     `}
   `;
@@ -1175,6 +1182,7 @@ async function renderAllTasks(container) {
   document.getElementById('admin-refresh')?.addEventListener('click', () => renderAllTasks(container));
   document.getElementById('admin-prev')?.addEventListener('click', () => { state.allTaskPage--; renderAllTasks(container); });
   document.getElementById('admin-next')?.addEventListener('click', () => { state.allTaskPage++; renderAllTasks(container); });
+  document.getElementById('admin-page-jump')?.addEventListener('change', (e) => { state.allTaskPage = parseInt(e.target.value); renderAllTasks(container); });
 
   document.getElementById('admin-search-btn')?.addEventListener('click', async () => {
     const search = document.getElementById('admin-search').value;
