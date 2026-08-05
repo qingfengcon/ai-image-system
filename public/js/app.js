@@ -1,3 +1,29 @@
+// ===== SVG Icon Set (Lucide-style) =====
+const ICON = {
+  palette: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.504 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>',
+  clipboard: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
+  chart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
+  folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
+  users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  gear: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  user: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  logout: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  lock: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  upload: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  image: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
+  x: '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
+  check: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  calendar: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  trending: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  download: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  refresh: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  sparkles: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.503 5 20l1.59-6.062L2 12l4.59-1.94L5 4l4.937 4.5L15 5l-1.59 6.062L18 12l-4.59 1.94L15 20z"/></svg>',
+  search: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  close: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+};
+
 // ===== 全局状态 =====
 const state = {
   token: localStorage.getItem('token') || '',
@@ -7,9 +33,14 @@ const state = {
   taskTotal: 0,
   taskPage: 1,
   taskPageSize: 15,
+  taskFilterStatus: '',
+  taskFilterType: '',
   allTasks: [],
   allTaskTotal: 0,
   allTaskPage: 1,
+  allTaskFilterStatus: '',
+  allTaskFilterType: '',
+  allTaskSearch: '',
   users: [],
   settings: {},
   stats: {},
@@ -60,7 +91,7 @@ function showLicenseModal() {
   modal.className = 'license-modal-overlay';
   modal.innerHTML = `
     <div class="license-modal">
-      <div class="license-icon">🔒</div>
+      <div class="license-icon">${ICON.lock}</div>
       <h2>系统授权验证</h2>
       <p class="license-desc">本系统需要授权才能使用，请联系管理员获取授权码</p>
       <div class="license-machine-id">
@@ -87,7 +118,7 @@ function showLicenseModal() {
     const errEl = document.getElementById('license-error');
     if (!key) {
       errEl.textContent = '请输入授权码';
-      errEl.style.display = 'block';
+      errEl.classList.add('show');
       return;
     }
 
@@ -110,7 +141,7 @@ function showLicenseModal() {
       render();
     } catch (err) {
       errEl.textContent = err.message;
-      errEl.style.display = 'block';
+      errEl.classList.add('show');
       btn.disabled = false;
       btn.textContent = '激活授权';
     }
@@ -194,14 +225,27 @@ async function api(method, url, data, isFormData = false) {
   return json;
 }
 
+// ===== Skeleton Loading =====
+function renderSkeletonRows(count = 8, cols = 6) {
+  return Array.from({ length: count }, () =>
+    `<tr class="skeleton-row">${Array.from({ length: cols }, () =>
+      '<td><div class="skeleton skeleton-cell"></div></td>'
+    ).join('')}</tr>`
+  ).join('');
+}
+
 // ===== Toast =====
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container') || createToastContainer();
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
+  // Auto-remove with fade-out
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 2700);
 }
 
 function createToastContainer() {
@@ -236,6 +280,11 @@ function render() {
   } else {
     app.innerHTML = renderLayout();
     bindLayoutEvents();
+    // Page transition animation
+    const mainContent = app.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.animation = 'staggerIn 0.3s ease';
+    }
     renderPage();
   }
 }
@@ -339,27 +388,27 @@ function renderLayout() {
         </div>
         <nav class="sidebar-nav">
           <button class="nav-item ${state.currentPage === 'generate' ? 'active' : ''}" data-page="generate">
-            <span class="icon">🎨</span> 图片生成
+            <span class="icon">${ICON.palette}</span> 图片生成
           </button>
           <button class="nav-item ${state.currentPage === 'tasks' ? 'active' : ''}" data-page="tasks">
-            <span class="icon">📋</span> 我的任务
+            <span class="icon">${ICON.clipboard}</span> 我的任务
           </button>
           <button class="nav-item ${state.currentPage === 'stats' ? 'active' : ''}" data-page="stats">
-            <span class="icon">📊</span> 使用统计
+            <span class="icon">${ICON.chart}</span> 使用统计
           </button>
           ${isAdmin ? `
           <button class="nav-item ${state.currentPage === 'all-tasks' ? 'active' : ''}" data-page="all-tasks">
-            <span class="icon">📁</span> 全部任务
+            <span class="icon">${ICON.folder}</span> 全部任务
           </button>
           <button class="nav-item ${state.currentPage === 'users' ? 'active' : ''}" data-page="users">
-            <span class="icon">👥</span> 用户管理
+            <span class="icon">${ICON.users}</span> 用户管理
           </button>
           <button class="nav-item ${state.currentPage === 'settings' ? 'active' : ''}" data-page="settings">
-            <span class="icon">⚙️</span> 系统设置
+            <span class="icon">${ICON.gear}</span> 系统设置
           </button>
           ` : ''}
           <button class="nav-item ${state.currentPage === 'profile' ? 'active' : ''}" data-page="profile">
-            <span class="icon">👤</span> 个人设置
+            <span class="icon">${ICON.user}</span> 个人设置
           </button>
         </nav>
         <div class="sidebar-footer">
@@ -371,7 +420,7 @@ function renderLayout() {
             </div>
           </div>
           <button class="nav-item" id="logout-btn" style="color:rgba(255,255,255,0.6)">
-            <span class="icon">🚪</span> 退出登录
+            <span class="icon">${ICON.logout}</span> 退出登录
           </button>
         </div>
       </aside>
@@ -418,8 +467,8 @@ function renderGenerate(container) {
     <div class="generate-container">
       <div class="generate-form">
         <div class="type-switch">
-          <button class="type-switch-btn ${state.generateType === 'text-to-image' ? 'active' : ''}" data-type="text-to-image">✨ 文生图</button>
-          <button class="type-switch-btn ${state.generateType === 'image-to-image' ? 'active' : ''}" data-type="image-to-image">🖼️ 图生图</button>
+          <button class="type-switch-btn ${state.generateType === 'text-to-image' ? 'active' : ''}" data-type="text-to-image">${ICON.sparkles} 文生图</button>
+          <button class="type-switch-btn ${state.generateType === 'image-to-image' ? 'active' : ''}" data-type="image-to-image">${ICON.image} 图生图</button>
         </div>
 
         <div class="form-group">
@@ -431,7 +480,7 @@ function renderGenerate(container) {
           <div class="form-group">
             <label>参考图片 * (最多14张)</label>
             <div class="upload-area" id="upload-area">
-              <div class="upload-icon">📤</div>
+              <div class="upload-icon">${ICON.upload}</div>
               <p>点击或拖拽上传图片</p>
               <input type="file" id="file-input" multiple accept="image/*" style="display:none">
             </div>
@@ -501,7 +550,7 @@ function renderGenerate(container) {
               <p>图片生成中，请稍候...</p>
             </div>
           ` : `
-            <div class="result-icon">🖼️</div>
+            <div class="result-icon">${ICON.image}</div>
             <p>生成的图片将在这里显示</p>
           `}
         </div>
@@ -653,7 +702,7 @@ function showResult(task) {
   try { images = JSON.parse(task.output_images || '[]'); } catch {}
 
   if (images.length === 0) {
-    resultArea.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>未获取到图片</p></div>`;
+    resultArea.innerHTML = `<div class="empty-state"><div class="empty-icon">${ICON.x}</div><p>未获取到图片</p></div>`;
     return;
   }
 
@@ -683,10 +732,20 @@ function viewImage(url) {
 
 // ===== 我的任务页面 =====
 async function renderTasks(container) {
-  container.innerHTML = `<div class="loading-overlay"><div class="loading-spinner"></div><p>加载中...</p></div>`;
+  container.innerHTML = `
+    <div class="page-header">
+      <h1>我的任务</h1>
+      <p>查看和管理您的图片生成任务</p>
+    </div>
+    <div class="card">
+      <table class="task-table">
+        <tbody>${renderSkeletonRows(8, 6)}</tbody>
+      </table>
+    </div>`;
 
   try {
-    const res = await api('GET', `/tasks?page=${state.taskPage}&pageSize=${state.taskPageSize}`);
+    const queryParams = `page=${state.taskPage}&pageSize=${state.taskPageSize}${state.taskFilterStatus ? '&status=' + state.taskFilterStatus : ''}${state.taskFilterType ? '&type=' + state.taskFilterType : ''}`;
+    const res = await api('GET', `/tasks?${queryParams}`);
     state.tasks = res.tasks || [];
     state.taskTotal = res.total || 0;
   } catch (err) {
@@ -703,23 +762,23 @@ async function renderTasks(container) {
     </div>
     <div class="task-filters">
       <select id="filter-status">
-        <option value="">全部状态</option>
-        <option value="pending">等待中</option>
-        <option value="processing">处理中</option>
-        <option value="completed">已完成</option>
-        <option value="failed">失败</option>
-        <option value="timeout">异常</option>
+        <option value="" ${state.taskFilterStatus === '' ? 'selected' : ''}>全部状态</option>
+        <option value="pending" ${state.taskFilterStatus === 'pending' ? 'selected' : ''}>等待中</option>
+        <option value="processing" ${state.taskFilterStatus === 'processing' ? 'selected' : ''}>处理中</option>
+        <option value="completed" ${state.taskFilterStatus === 'completed' ? 'selected' : ''}>已完成</option>
+        <option value="failed" ${state.taskFilterStatus === 'failed' ? 'selected' : ''}>失败</option>
+        <option value="timeout" ${state.taskFilterStatus === 'timeout' ? 'selected' : ''}>异常</option>
       </select>
       <select id="filter-type">
-        <option value="">全部类型</option>
-        <option value="text-to-image">文生图</option>
-        <option value="image-to-image">图生图</option>
+        <option value="" ${state.taskFilterType === '' ? 'selected' : ''}>全部类型</option>
+        <option value="text-to-image" ${state.taskFilterType === 'text-to-image' ? 'selected' : ''}>文生图</option>
+        <option value="image-to-image" ${state.taskFilterType === 'image-to-image' ? 'selected' : ''}>图生图</option>
       </select>
       <button class="btn btn-secondary btn-sm" id="refresh-tasks">刷新</button>
     </div>
     ${state.tasks.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-icon">📋</div>
+        <div class="empty-icon">${ICON.clipboard}</div>
         <h3>暂无任务</h3>
         <p>去生成页面创建您的第一个任务吧</p>
       </div>
@@ -769,7 +828,7 @@ async function renderTasks(container) {
         <button ${state.taskPage <= 1 ? 'disabled' : ''} id="prev-page">上一页</button>
         <button ${state.taskPage >= totalPages ? 'disabled' : ''} id="next-page">下一页</button>
         <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">共 ${totalPages || 1} 页 / ${state.taskTotal} 条</span>
-        <select id="page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;">
+        <select id="page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--gray-light);background:var(--white);font-size:13px;cursor:pointer;">
           ${Array.from({length: totalPages || 1}, (_, i) => `<option value="${i+1}" ${i+1 === state.taskPage ? 'selected' : ''}>第 ${i+1} 页</option>`).join('')}
         </select>
       </div>
@@ -782,20 +841,14 @@ async function renderTasks(container) {
   document.getElementById('next-page')?.addEventListener('click', () => { state.taskPage++; renderTasks(container); });
   document.getElementById('page-jump')?.addEventListener('change', (e) => { state.taskPage = parseInt(e.target.value); renderTasks(container); });
 
-  document.getElementById('filter-status')?.addEventListener('change', async (e) => {
-    const type = document.getElementById('filter-type').value;
-    const res = await api('GET', `/tasks?page=1&pageSize=${state.taskPageSize}&status=${e.target.value}&type=${type}`);
-    state.tasks = res.tasks || [];
-    state.taskTotal = res.total || 0;
+  document.getElementById('filter-status')?.addEventListener('change', (e) => {
+    state.taskFilterStatus = e.target.value;
     state.taskPage = 1;
     renderTasks(container);
   });
 
-  document.getElementById('filter-type')?.addEventListener('change', async (e) => {
-    const status = document.getElementById('filter-status').value;
-    const res = await api('GET', `/tasks?page=1&pageSize=${state.taskPageSize}&status=${status}&type=${e.target.value}`);
-    state.tasks = res.tasks || [];
-    state.taskTotal = res.total || 0;
+  document.getElementById('filter-type')?.addEventListener('change', (e) => {
+    state.taskFilterType = e.target.value;
     state.taskPage = 1;
     renderTasks(container);
   });
@@ -1003,22 +1056,22 @@ async function renderStats(container) {
     </div>
     <div class="stats-grid">
       <div class="stat-card purple">
-        <div class="stat-icon">📊</div>
+        <div class="stat-icon">${ICON.chart}</div>
         <div class="stat-value">${s.total || 0}</div>
         <div class="stat-label">总任务数</div>
       </div>
       <div class="stat-card cyan">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon">${ICON.check}</div>
         <div class="stat-value">${completed}</div>
         <div class="stat-label">已完成</div>
       </div>
       <div class="stat-card pink">
-        <div class="stat-icon">📅</div>
+        <div class="stat-icon">${ICON.calendar}</div>
         <div class="stat-value">${s.today || 0}</div>
         <div class="stat-label">今日任务</div>
       </div>
       <div class="stat-card yellow">
-        <div class="stat-icon">❌</div>
+        <div class="stat-icon">${ICON.x}</div>
         <div class="stat-value">${failed}</div>
         <div class="stat-label">失败任务</div>
       </div>
@@ -1026,7 +1079,7 @@ async function renderStats(container) {
 
     <div class="chart-grid">
       <div class="chart-card">
-        <h3>📈 近7天趋势</h3>
+        <h3>${ICON.trending} 近7天趋势</h3>
         <div class="trend-chart">
           ${(s.last7Days || []).map(d => `
             <div class="trend-bar">
@@ -1039,7 +1092,7 @@ async function renderStats(container) {
       </div>
 
       <div class="chart-card">
-        <h3>📊 任务类型分布</h3>
+        <h3>${ICON.chart} 任务类型分布</h3>
         <div class="bar-chart">
           <div class="bar-row">
             <div class="bar-label">文生图</div>
@@ -1095,10 +1148,20 @@ async function renderStats(container) {
 
 // ===== 全部任务（管理员） =====
 async function renderAllTasks(container) {
-  container.innerHTML = `<div class="loading-overlay"><div class="loading-spinner"></div><p>加载中...</p></div>`;
+  container.innerHTML = `
+    <div class="page-header">
+      <h1>全部任务</h1>
+      <p>管理系统所有用户的生成任务</p>
+    </div>
+    <div class="card">
+      <table class="task-table">
+        <tbody>${renderSkeletonRows(10, 7)}</tbody>
+      </table>
+    </div>`;
 
   try {
-    const res = await api('GET', `/tasks/all-tasks?page=${state.allTaskPage}&pageSize=${state.taskPageSize}`);
+    const queryParams = `page=${state.allTaskPage}&pageSize=${state.taskPageSize}${state.allTaskSearch ? '&search=' + encodeURIComponent(state.allTaskSearch) : ''}${state.allTaskFilterStatus ? '&status=' + state.allTaskFilterStatus : ''}${state.allTaskFilterType ? '&type=' + state.allTaskFilterType : ''}`;
+    const res = await api('GET', `/tasks/all-tasks?${queryParams}`);
     state.allTasks = res.tasks || [];
     state.allTaskTotal = res.total || 0;
   } catch (err) {
@@ -1114,25 +1177,25 @@ async function renderAllTasks(container) {
     </div>
     <div class="task-filters">
       <select id="admin-filter-status">
-        <option value="">全部状态</option>
-        <option value="pending">等待中</option>
-        <option value="processing">处理中</option>
-        <option value="completed">已完成</option>
-        <option value="failed">失败</option>
-        <option value="timeout">异常</option>
+        <option value="" ${state.allTaskFilterStatus === '' ? 'selected' : ''}>全部状态</option>
+        <option value="pending" ${state.allTaskFilterStatus === 'pending' ? 'selected' : ''}>等待中</option>
+        <option value="processing" ${state.allTaskFilterStatus === 'processing' ? 'selected' : ''}>处理中</option>
+        <option value="completed" ${state.allTaskFilterStatus === 'completed' ? 'selected' : ''}>已完成</option>
+        <option value="failed" ${state.allTaskFilterStatus === 'failed' ? 'selected' : ''}>失败</option>
+        <option value="timeout" ${state.allTaskFilterStatus === 'timeout' ? 'selected' : ''}>异常</option>
       </select>
       <select id="admin-filter-type">
-        <option value="">全部类型</option>
-        <option value="text-to-image">文生图</option>
-        <option value="image-to-image">图生图</option>
+        <option value="" ${state.allTaskFilterType === '' ? 'selected' : ''}>全部类型</option>
+        <option value="text-to-image" ${state.allTaskFilterType === 'text-to-image' ? 'selected' : ''}>文生图</option>
+        <option value="image-to-image" ${state.allTaskFilterType === 'image-to-image' ? 'selected' : ''}>图生图</option>
       </select>
-      <input type="text" id="admin-search" placeholder="搜索提示词...">
+      <input type="text" id="admin-search" value="${state.allTaskSearch || ''}" placeholder="搜索提示词...">
       <button class="btn btn-secondary btn-sm" id="admin-search-btn">搜索</button>
       <button class="btn btn-ghost btn-sm" id="admin-refresh">刷新</button>
     </div>
     ${state.allTasks.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-icon">📁</div>
+        <div class="empty-icon">${ICON.folder}</div>
         <h3>暂无任务</h3>
       </div>
     ` : `
@@ -1172,7 +1235,7 @@ async function renderAllTasks(container) {
         <button ${state.allTaskPage <= 1 ? 'disabled' : ''} id="admin-prev">上一页</button>
         <button ${state.allTaskPage >= totalPages ? 'disabled' : ''} id="admin-next">下一页</button>
         <span style="padding:8px 12px;font-size:13px;color:var(--dark-light)">共 ${totalPages || 1} 页 / ${state.allTaskTotal} 条</span>
-        <select id="admin-page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;">
+        <select id="admin-page-jump" style="padding:6px 10px;border-radius:8px;border:2px solid var(--gray-light);background:var(--white);font-size:13px;cursor:pointer;">
           ${Array.from({length: totalPages || 1}, (_, i) => `<option value="${i+1}" ${i+1 === state.allTaskPage ? 'selected' : ''}>第 ${i+1} 页</option>`).join('')}
         </select>
       </div>
@@ -1184,13 +1247,22 @@ async function renderAllTasks(container) {
   document.getElementById('admin-next')?.addEventListener('click', () => { state.allTaskPage++; renderAllTasks(container); });
   document.getElementById('admin-page-jump')?.addEventListener('change', (e) => { state.allTaskPage = parseInt(e.target.value); renderAllTasks(container); });
 
-  document.getElementById('admin-search-btn')?.addEventListener('click', async () => {
-    const search = document.getElementById('admin-search').value;
-    const status = document.getElementById('admin-filter-status').value;
-    const type = document.getElementById('admin-filter-type').value;
-    const res = await api('GET', `/tasks/all-tasks?page=1&pageSize=${state.taskPageSize}&search=${encodeURIComponent(search)}&status=${status}&type=${type}`);
-    state.allTasks = res.tasks || [];
-    state.allTaskTotal = res.total || 0;
+  document.getElementById('admin-search-btn')?.addEventListener('click', () => {
+    state.allTaskSearch = document.getElementById('admin-search').value;
+    state.allTaskFilterStatus = document.getElementById('admin-filter-status').value;
+    state.allTaskFilterType = document.getElementById('admin-filter-type').value;
+    state.allTaskPage = 1;
+    renderAllTasks(container);
+  });
+
+  document.getElementById('admin-filter-status')?.addEventListener('change', (e) => {
+    state.allTaskFilterStatus = e.target.value;
+    state.allTaskPage = 1;
+    renderAllTasks(container);
+  });
+
+  document.getElementById('admin-filter-type')?.addEventListener('change', (e) => {
+    state.allTaskFilterType = e.target.value;
     state.allTaskPage = 1;
     renderAllTasks(container);
   });
@@ -1202,7 +1274,16 @@ async function renderAllTasks(container) {
 
 // ===== 用户管理（管理员） =====
 async function renderUsers(container) {
-  container.innerHTML = `<div class="loading-overlay"><div class="loading-spinner"></div><p>加载中...</p></div>`;
+  container.innerHTML = `
+    <div class="page-header">
+      <h1>用户管理</h1>
+      <p>管理系统用户和权限</p>
+    </div>
+    <div class="card">
+      <table class="user-table">
+        <tbody>${renderSkeletonRows(6, 5)}</tbody>
+      </table>
+    </div>`;
 
   try {
     state.users = await api('GET', '/auth/users');
@@ -1450,7 +1531,7 @@ async function renderSettings(container) {
         </div>
       </div>
       <div class="settings-section">
-        <h3>🎨 默认生成参数</h3>
+        <h3>${ICON.sparkles} 默认生成参数</h3>
         <div class="setting-item">
           <label>默认画质</label>
           <select id="set-resolution">
@@ -1477,7 +1558,7 @@ async function renderSettings(container) {
         </div>
       </div>
       <div class="settings-section">
-        <h3>⚙️ 系统参数</h3>
+        <h3>${ICON.gear} 系统参数</h3>
         <div class="setting-item">
           <label>系统名称</label>
           <input type="text" id="set-system-name" value="${state.settings.system_name || 'AI图片处理系统'}">
@@ -1488,7 +1569,7 @@ async function renderSettings(container) {
         </div>
       </div>
       <div class="settings-section">
-        <h3>📊 全局统计</h3>
+        <h3>${ICON.chart} 全局统计</h3>
         <div id="global-stats-area">
           <button class="btn btn-secondary btn-sm" id="load-global-stats">加载全局统计</button>
         </div>

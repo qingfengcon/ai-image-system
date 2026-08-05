@@ -56,6 +56,8 @@ router.post('/text-to-image', authMiddleware, async (req, res) => {
     const finalResolution = resolution || defaultResolution?.value || '1k';
     const finalAspectRatio = aspect_ratio || defaultAspectRatio?.value || '1:1';
     const finalOutputFormat = output_format || defaultOutputFormat?.value || 'png';
+    const finalWebSearch = String(enable_web_search) === 'true';
+    const finalImageSearch = String(enable_image_search) === 'true';
     console.log(`[Task] 最终参数: aspect_ratio=${finalAspectRatio}, resolution=${finalResolution}, format=${finalOutputFormat}`);
 
     // 创建任务记录
@@ -76,8 +78,8 @@ router.post('/text-to-image', authMiddleware, async (req, res) => {
         aspect_ratio: finalAspectRatio,
         resolution: finalResolution,
         output_format: finalOutputFormat,
-        enable_web_search: enable_web_search || false,
-        enable_image_search: enable_image_search || false
+        enable_web_search: finalWebSearch,
+        enable_image_search: finalImageSearch
       });
 
       const requestId = apiResult.data?.id;
@@ -144,6 +146,8 @@ router.post('/image-to-image', authMiddleware, upload.array('images', 14), async
     const finalResolution = resolution || defaultResolution?.value || '1k';
     const finalAspectRatio = aspect_ratio || defaultAspectRatio?.value || '1:1';
     const finalOutputFormat = output_format || defaultOutputFormat?.value || 'png';
+    const finalWebSearch = String(enable_web_search) === 'true';
+    const finalImageSearch = String(enable_image_search) === 'true';
     console.log(`[Task] 最终参数: aspect_ratio=${finalAspectRatio}, resolution=${finalResolution}, format=${finalOutputFormat}`);
 
     // 将上传的文件转为可访问的URL（使用本地路径）
@@ -187,8 +191,8 @@ router.post('/image-to-image', authMiddleware, upload.array('images', 14), async
         aspect_ratio: finalAspectRatio,
         resolution: finalResolution,
         output_format: finalOutputFormat,
-        enable_web_search: enable_web_search || false,
-        enable_image_search: enable_image_search || false
+        enable_web_search: finalWebSearch,
+        enable_image_search: finalImageSearch
       });
 
       const requestId = apiResult.data?.id;

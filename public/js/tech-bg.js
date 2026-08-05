@@ -11,13 +11,13 @@
   const MAX_DIST = 180;
   const SPEED = 0.4;
 
-  // 颜色池
+  // 颜色池 - 深靛蓝 + 电光青
   const COLORS = [
-    'rgba(108, 92, 231, 0.6)',   // primary
-    'rgba(0, 206, 201, 0.5)',    // secondary
-    'rgba(162, 155, 254, 0.4)',  // primary-light
-    'rgba(85, 239, 196, 0.4)',   // secondary-light
-    'rgba(253, 121, 168, 0.3)',  // accent
+    'rgba(79, 70, 229, 0.6)',    // primary indigo
+    'rgba(6, 182, 212, 0.5)',     // secondary cyan
+    'rgba(129, 140, 248, 0.4)',   // primary-light
+    'rgba(103, 232, 249, 0.4)',   // secondary-light
+    'rgba(245, 158, 11, 0.3)',    // accent amber
   ];
 
   function resize() {
@@ -56,7 +56,7 @@
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = `rgba(108, 92, 231, ${alpha * 0.25})`;
+    ctx.strokeStyle = `rgba(79, 70, 229, ${alpha * 0.25})`;
     ctx.lineWidth = 0.8;
     ctx.stroke();
   }
@@ -94,11 +94,25 @@
     animId = requestAnimationFrame(animate);
   }
 
+  function drawStatic() {
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < particles.length; i++) {
+      drawParticle(particles[i]);
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const dx = particles[i].x - p2.x;
+        const dy = particles[i].y - p2.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MAX_DIST) drawLine(particles[i], p2, dist);
+      }
+    }
+  }
+
   // 页面隐藏时暂停动画，节省性能
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       cancelAnimationFrame(animId);
-    } else {
+    } else if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       animate();
     }
   });
@@ -108,5 +122,11 @@
   });
 
   init();
-  animate();
+
+  // Respect prefers-reduced-motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    drawStatic();
+  } else {
+    animate();
+  }
 })();
