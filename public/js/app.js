@@ -387,6 +387,7 @@ function renderLayout() {
           <h2>${state.systemName} <span class="role-badge">${isAdmin ? '管理员' : '用户'}</span></h2>
         </div>
         <nav class="sidebar-nav">
+          <div class="nav-section-label">工作区</div>
           <button class="nav-item ${state.currentPage === 'generate' ? 'active' : ''}" data-page="generate">
             <span class="icon">${ICON.palette}</span> 图片生成
           </button>
@@ -397,6 +398,7 @@ function renderLayout() {
             <span class="icon">${ICON.chart}</span> 使用统计
           </button>
           ${isAdmin ? `
+          <div class="nav-section-label">管理</div>
           <button class="nav-item ${state.currentPage === 'all-tasks' ? 'active' : ''}" data-page="all-tasks">
             <span class="icon">${ICON.folder}</span> 全部任务
           </button>
@@ -407,6 +409,7 @@ function renderLayout() {
             <span class="icon">${ICON.gear}</span> 系统设置
           </button>
           ` : ''}
+          <div class="nav-section-label">账户</div>
           <button class="nav-item ${state.currentPage === 'profile' ? 'active' : ''}" data-page="profile">
             <span class="icon">${ICON.user}</span> 个人设置
           </button>
@@ -424,6 +427,9 @@ function renderLayout() {
           </button>
         </div>
       </aside>
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="菜单">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <main class="main-content" id="page-content"></main>
     </div>
   `;
@@ -431,7 +437,14 @@ function renderLayout() {
 
 function bindLayoutEvents() {
   document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
-    btn.addEventListener('click', () => navigate(btn.dataset.page));
+    btn.addEventListener('click', () => {
+      navigate(btn.dataset.page);
+      // Close sidebar on mobile after navigation
+      document.querySelector('.sidebar')?.classList.remove('open');
+    });
+  });
+  document.getElementById('mobile-menu-toggle')?.addEventListener('click', () => {
+    document.querySelector('.sidebar')?.classList.toggle('open');
   });
   document.getElementById('logout-btn').addEventListener('click', () => {
     state.token = '';
