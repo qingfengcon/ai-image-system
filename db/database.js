@@ -37,35 +37,44 @@ async function getDb() {
 // 数据库迁移：确保表结构最新
 function migrateDb() {
   try {
-    // 检查 tasks 表是否需要添加 timeout 状态
+    // 检查 tasks 表是否需要添加 timeout 状态或视频类型支持
     const tableInfo = queryAll("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'");
-    if (tableInfo.length > 0 && !tableInfo[0].sql.includes('timeout')) {
-      console.log('[Migration] 更新 tasks 表约束，添加 timeout 状态...');
-      db.run(`
-        CREATE TABLE tasks_new (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          type TEXT NOT NULL CHECK(type IN ('text-to-image', 'image-to-image')),
-          prompt TEXT NOT NULL,
-          aspect_ratio TEXT DEFAULT '1:1',
-          resolution TEXT DEFAULT '1k',
-          output_format TEXT DEFAULT 'png',
-          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'processing', 'completed', 'failed', 'timeout')),
-          request_id TEXT,
-          input_images TEXT,
-          output_images TEXT,
-          error TEXT,
-          inference_time INTEGER,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          completed_at DATETIME,
-          FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-      `);
-      db.run('INSERT INTO tasks_new SELECT * FROM tasks');
-      db.run('DROP TABLE tasks');
-      db.run('ALTER TABLE tasks_new RENAME TO tasks');
-      saveDb();
-      console.log('[Migration] tasks 表约束更新完成');
+    if (tableInfo.length > 0) {
+      const tableSql = tableInfo[0].sql;
+      const needsTimeout = !tableSql.includes('timeout');
+      const needsVideoType = !tableSql.includes('text-to-video');
+      const needsDuration = !tableSql.includes('duration');
+
+      if (needsTimeout || needsVideoType || needsDuration) {
+        console.log('[Migration] 更新 tasks 表结构，添加视频类型和字段...');
+        db.run(`
+          CREATE TABLE tasks_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL CHECK(type IN ('text-to-image', 'image-to-image', 'text-to-video', 'image-to-video')),
+            prompt TEXT NOT NULL,
+            aspect_ratio TEXT DEFAULT '1:1',
+            resolution TEXT DEFAULT '1k',
+            output_format TEXT DEFAULT 'png',
+            duration TEXT DEFAULT '5',
+            guidance_scale REAL DEFAULT 0.5,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'processing', 'completed', 'failed', 'timeout')),
+            request_id TEXT,
+            input_images TEXT,
+            output_images TEXT,
+            error TEXT,
+            inference_time INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at DATETIME,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          )
+        `);
+        db.run('INSERT INTO tasks_new (id, user_id, type, prompt, aspect_ratio, resolution, output_format, status, request_id, input_images, output_images, error, inference_time, created_at, completed_at) SELECT id, user_id, type, prompt, aspect_ratio, resolution, output_format, status, request_id, input_images, output_images, error, inference_time, created_at, completed_at FROM tasks');
+        db.run('DROP TABLE tasks');
+        db.run('ALTER TABLE tasks_new RENAME TO tasks');
+        saveDb();
+        console.log('[Migration] tasks 表结构更新完成');
+      }
     }
 
     // 添加用户 status 字段（启用/禁用）

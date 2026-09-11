@@ -216,14 +216,183 @@ router.post('/image-to-image', authMiddleware, upload.array('images', 14), async
   }
 });
 
+// 文生视频
+router.post('/text-to-video', authMiddleware, async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { prompt, aspect_ratio, duration, guidance_scale } = req.body;
+    console.log(`[Task] 文生视频请求 | 用户: ${req.user.username}(${req.user.id}) | 提示词: ${prompt?.slice(0, 60)}...`);
+
+    if (!prompt) {
+      return res.status(400).json({ error: '提示词不能为空' });
+    }
+
+    // 检查每日任务限制
+    const limitSetting = queryOne('SELECT value FROM settings WHERE key = ?', ['max_tasks_per_user_per_day']);
+    const dailyLimit = parseInt(limitSetting?.value || '100');
+    const todayCount = queryOne(
+      `SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND date(created_at) = date('now')`,
+      [req.user.id]
+    );
+    if (todayCount.count >= dailyLimit) {
+      return res.status(429).json({ error: `今日任务已达上限(${dailyLimit}次)` });
+    }
+
+    const finalDuration = duration || '5';
+    const finalAspectRatio = aspect_ratio || '16:9';
+    const finalGuidanceScale = guidance_scale !== undefined ? parseFloat(guidance_scale) : 0.5;
+
+    // 创建任务记录
+    const taskResult = run(
+      `INSERT INTO tasks (user_id, type, prompt, aspect_ratio, duration, guidance_scale, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, 'text-to-video', prompt, finalAspectRatio, finalDuration, finalGuidanceScale, 'processing']
+    );
+
+    const taskId = taskResult.lastInsertRowid;
+    console.log(`[Task] 视频任务记录已创建: taskId=${taskId}`);
+
+    // 调用WaveSpeed API
+    try {
+      const apiResult = await wavespeed.textToVideo({
+        prompt,
+        aspect_ratio: finalAspectRatio,
+        duration: parseInt(finalDuration),
+        guidance_scale: finalGuidanceScale
+      });
+
+      const requestId = apiResult.data?.id;
+      console.log(`[Task] WaveSpeed API返回成功: requestId=${requestId}, 耗时=${Date.now() - startTime}ms`);
+      run('UPDATE tasks SET request_id = ? WHERE id = ?', [requestId, taskId]);
+
+      // 视频生成时间更长，使用更多轮询次数
+      pollTaskResult(taskId, requestId, 180);
+
+      res.json({
+        message: '视频任务已提交',
+        taskId,
+        requestId
+      });
+    } catch (apiErr) {
+      const errorMsg = apiErr.response?.data?.message || apiErr.message;
+      console.error(`[Task] WaveSpeed API调用失败: taskId=${taskId}, 错误: ${errorMsg}`);
+      run('UPDATE tasks SET status = ?, error = ? WHERE id = ?', ['failed', errorMsg, taskId]);
+      res.status(500).json({ error: 'API调用失败: ' + errorMsg });
+    }
+  } catch (err) {
+    console.error(`[Task] 文生视频任务创建异常: ${err.message}`, err.stack);
+    res.status(500).json({ error: '创建任务失败: ' + err.message });
+  }
+});
+
+// 图生视频
+router.post('/image-to-video', authMiddleware, upload.array('images', 2), async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { prompt, aspect_ratio, duration, guidance_scale, negative_prompt } = req.body;
+    const files = req.files || [];
+    console.log(`[Task] 图生视频请求 | 用户: ${req.user.username}(${req.user.id}) | 图片: ${files.length}张 | 提示词: ${prompt?.slice(0, 60)}...`);
+
+    if (!prompt) {
+      return res.status(400).json({ error: '提示词不能为空' });
+    }
+
+    if (files.length === 0) {
+      return res.status(400).json({ error: '请上传至少一张参考图片' });
+    }
+
+    // 检查每日任务限制
+    const limitSetting = queryOne('SELECT value FROM settings WHERE key = ?', ['max_tasks_per_user_per_day']);
+    const dailyLimit = parseInt(limitSetting?.value || '100');
+    const todayCount = queryOne(
+      `SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND date(created_at) = date('now')`,
+      [req.user.id]
+    );
+    if (todayCount.count >= dailyLimit) {
+      return res.status(429).json({ error: `今日任务已达上限(${dailyLimit}次)` });
+    }
+
+    const finalDuration = duration || '5';
+    const finalAspectRatio = aspect_ratio || '16:9';
+    const finalGuidanceScale = guidance_scale !== undefined ? parseFloat(guidance_scale) : 0.5;
+
+    const imageUrls = files.map(f => `/uploads/input/${f.filename}`);
+
+    // 创建任务记录
+    const taskResult = run(
+      `INSERT INTO tasks (user_id, type, prompt, aspect_ratio, duration, guidance_scale, status, input_images)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, 'image-to-video', prompt, finalAspectRatio, finalDuration, finalGuidanceScale, 'processing', JSON.stringify(imageUrls)]
+    );
+
+    const taskId = taskResult.lastInsertRowid;
+    console.log(`[Task] 图生视频任务记录已创建: taskId=${taskId}`);
+
+    // 上传图片到WaveSpeed CDN获取公网URL
+    let cdnUrls = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const cdnUrl = await wavespeed.uploadImage(files[i].path);
+        cdnUrls.push(cdnUrl);
+      }
+      console.log(`[Task] 图片上传完成: ${cdnUrls.length}张`);
+    } catch (uploadErr) {
+      const errorMsg = uploadErr.response?.data?.message || uploadErr.message;
+      console.error(`[Task] 图片上传CDN失败: ${errorMsg}`);
+      run('UPDATE tasks SET status = ?, error = ? WHERE id = ?', ['failed', '图片上传失败: ' + errorMsg, taskId]);
+      return res.status(500).json({ error: '图片上传失败: ' + errorMsg });
+    }
+
+    // 调用WaveSpeed API
+    try {
+      const videoParams = {
+        prompt,
+        image: cdnUrls[0],
+        aspect_ratio: finalAspectRatio,
+        duration: parseInt(finalDuration),
+        guidance_scale: finalGuidanceScale
+      };
+      // 如果上传了两张图片，第二张作为尾帧
+      if (cdnUrls.length > 1) {
+        videoParams.last_image = cdnUrls[1];
+      }
+      if (negative_prompt) {
+        videoParams.negative_prompt = negative_prompt;
+      }
+
+      const apiResult = await wavespeed.imageToVideo(videoParams);
+
+      const requestId = apiResult.data?.id;
+      console.log(`[Task] WaveSpeed API返回成功: requestId=${requestId}, 耗时=${Date.now() - startTime}ms`);
+      run('UPDATE tasks SET request_id = ? WHERE id = ?', [requestId, taskId]);
+
+      pollTaskResult(taskId, requestId, 180);
+
+      res.json({
+        message: '视频任务已提交',
+        taskId,
+        requestId
+      });
+    } catch (apiErr) {
+      const errorMsg = apiErr.response?.data?.message || apiErr.message;
+      console.error(`[Task] WaveSpeed API调用失败: taskId=${taskId}, 错误: ${errorMsg}`);
+      run('UPDATE tasks SET status = ?, error = ? WHERE id = ?', ['failed', errorMsg, taskId]);
+      res.status(500).json({ error: 'API调用失败: ' + errorMsg });
+    }
+  } catch (err) {
+    console.error(`[Task] 图生视频任务创建异常: ${err.message}`, err.stack);
+    res.status(500).json({ error: '创建任务失败: ' + err.message });
+  }
+});
+
 // 轮询任务结果
-function pollTaskResult(taskId, requestId) {
+function pollTaskResult(taskId, requestId, maxAttemptsParam) {
   if (!requestId) {
     console.warn(`[Poll] 任务 ${taskId} 无requestId, 跳过轮询`);
     return;
   }
 
-  const maxAttempts = 120;
+  const maxAttempts = maxAttemptsParam || 120;
   let attempts = 0;
   console.log(`[Poll] 开始轮询: taskId=${taskId}, requestId=${requestId}, 最大尝试=${maxAttempts}次, 间隔5秒`);
 
@@ -274,32 +443,41 @@ function pollTaskResult(taskId, requestId) {
   }, 5000);
 }
 
-// 下载输出图片到本地
+// 下载输出文件到本地（支持图片和视频）
 async function downloadOutputImages(taskId, urls) {
   const axios = require('axios');
   const outputDir = path.join(config.UPLOAD_DIR, 'output');
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
-  console.log(`[Download] 开始下载输出图片: taskId=${taskId}, 共${urls.length}张`);
+  console.log(`[Download] 开始下载输出文件: taskId=${taskId}, 共${urls.length}个`);
   const localUrls = [];
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     try {
-      console.log(`[Download] 下载第 ${i + 1}/${urls.length} 张: ${url.slice(0, 100)}...`);
-      const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 });
-      const ext = url.endsWith('.jpg') || url.endsWith('.jpeg') ? '.jpg' : '.png';
+      console.log(`[Download] 下载第 ${i + 1}/${urls.length} 个: ${url.slice(0, 100)}...`);
+      const isVideo = url.includes('.mp4') || url.includes('video');
+      const timeout = isVideo ? 120000 : 30000;
+      const response = await axios.get(url, { responseType: 'arraybuffer', timeout });
+      let ext;
+      if (isVideo) {
+        ext = '.mp4';
+      } else if (url.endsWith('.jpg') || url.endsWith('.jpeg')) {
+        ext = '.jpg';
+      } else {
+        ext = '.png';
+      }
       const filename = `${taskId}-${Date.now()}${ext}`;
       const filepath = path.join(outputDir, filename);
       fs.writeFileSync(filepath, response.data);
       localUrls.push(`/uploads/output/${filename}`);
-      console.log(`[Download] 第 ${i + 1} 张下载成功: ${filename}, 大小=${(response.data.length / 1024).toFixed(1)}KB`);
+      console.log(`[Download] 第 ${i + 1} 个下载成功: ${filename}, 大小=${(response.data.length / 1024).toFixed(1)}KB`);
     } catch (err) {
-      console.error(`[Download] 第 ${i + 1} 张下载失败: ${err.message}, 降级使用原始URL`);
-      localUrls.push(url); // 降级使用原始URL
+      console.error(`[Download] 第 ${i + 1} 个下载失败: ${err.message}, 降级使用原始URL`);
+      localUrls.push(url);
     }
   }
 
-  console.log(`[Download] 图片下载完成: taskId=${taskId}, 本地路径=${JSON.stringify(localUrls)}`);
+  console.log(`[Download] 文件下载完成: taskId=${taskId}, 本地路径=${JSON.stringify(localUrls)}`);
   run('UPDATE tasks SET output_images = ? WHERE id = ?', [JSON.stringify(localUrls), taskId]);
 }
 

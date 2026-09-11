@@ -118,6 +118,58 @@ class WaveSpeedService {
     }
   }
 
+  // 文生视频 (Kling v2.5 Turbo Pro)
+  async textToVideo({ prompt, aspect_ratio, duration, guidance_scale }) {
+    const payload = { prompt };
+    if (aspect_ratio) payload.aspect_ratio = aspect_ratio;
+    if (duration) payload.duration = duration;
+    if (guidance_scale !== undefined) payload.guidance_scale = guidance_scale;
+
+    const url = `${this.baseUrl}/kwaivgi/kling-v2.5-turbo-pro/text-to-video`;
+    console.log(`[WaveSpeed] 文生视频请求 -> ${url}`);
+    console.log(`[WaveSpeed] 请求参数: ${JSON.stringify({ ...payload, prompt: prompt.slice(0, 80) + (prompt.length > 80 ? '...' : '') })}`);
+
+    try {
+      const response = await axios.post(url, payload, { headers: this.getHeaders() });
+      console.log(`[WaveSpeed] 文生视频完整响应: ${JSON.stringify(response.data).slice(0, 500)}`);
+      console.log(`[WaveSpeed] 文生视频响应: code=${response.data?.code}, status=${response.data?.data?.status}, requestId=${response.data?.data?.id}`);
+      return response.data;
+    } catch (err) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+      console.error(`[WaveSpeed] 文生视频请求失败: HTTP ${status}`);
+      console.error(`[WaveSpeed] 错误详情: ${JSON.stringify(data || err.message)}`);
+      throw err;
+    }
+  }
+
+  // 图生视频 (Kling v2.5 Turbo Pro)
+  async imageToVideo({ prompt, image, last_image, aspect_ratio, duration, guidance_scale, negative_prompt }) {
+    const payload = { prompt, image };
+    if (last_image) payload.last_image = last_image;
+    if (aspect_ratio) payload.aspect_ratio = aspect_ratio;
+    if (duration) payload.duration = duration;
+    if (guidance_scale !== undefined) payload.guidance_scale = guidance_scale;
+    if (negative_prompt) payload.negative_prompt = negative_prompt;
+
+    const url = `${this.baseUrl}/kwaivgi/kling-v2.5-turbo-pro/image-to-video`;
+    console.log(`[WaveSpeed] 图生视频请求 -> ${url}`);
+    console.log(`[WaveSpeed] 请求参数: image=${image?.slice(0, 80)}, prompt=${prompt.slice(0, 80)}, duration=${duration}`);
+
+    try {
+      const response = await axios.post(url, payload, { headers: this.getHeaders() });
+      console.log(`[WaveSpeed] 图生视频完整响应: ${JSON.stringify(response.data).slice(0, 500)}`);
+      console.log(`[WaveSpeed] 图生视频响应: code=${response.data?.code}, status=${response.data?.data?.status}, requestId=${response.data?.data?.id}`);
+      return response.data;
+    } catch (err) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+      console.error(`[WaveSpeed] 图生视频请求失败: HTTP ${status}`);
+      console.error(`[WaveSpeed] 错误详情: ${JSON.stringify(data || err.message)}`);
+      throw err;
+    }
+  }
+
   // 查询任务结果
   async getTaskResult(requestId) {
     const url = `${this.baseUrl}/predictions/${requestId}/result`;

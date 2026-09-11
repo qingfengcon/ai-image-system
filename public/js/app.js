@@ -16,6 +16,7 @@ const state = {
   globalStats: {},
   uploadFiles: [],
   generating: false,
+  generateMode: 'image', // 'image' or 'video'
   generateType: 'text-to-image',
   systemName: 'AI图片处理系统',
   authorized: true,  // 默认已授权，后续检查会更新
@@ -339,7 +340,7 @@ function renderLayout() {
         </div>
         <nav class="sidebar-nav">
           <button class="nav-item ${state.currentPage === 'generate' ? 'active' : ''}" data-page="generate">
-            <span class="icon">🎨</span> 图片生成
+            <span class="icon">🎨</span> 创作生成
           </button>
           <button class="nav-item ${state.currentPage === 'tasks' ? 'active' : ''}" data-page="tasks">
             <span class="icon">📋</span> 我的任务
@@ -410,30 +411,44 @@ function renderPage() {
 
 // ===== 图片生成页面 =====
 function renderGenerate(container) {
+  const isVideo = state.generateMode === 'video';
+  const pageTitle = isVideo ? '视频生成' : '图片生成';
+  const pageDesc = isVideo ? '使用Kling 2.5 Turbo Pro模型生成视频' : '使用文生图或图生图生成您想要的图片';
+
   container.innerHTML = `
     <div class="page-header">
-      <h1>图片生成</h1>
-      <p>使用文生图或图生图生成您想要的图片</p>
+      <h1>${pageTitle}</h1>
+      <p>${pageDesc}</p>
     </div>
     <div class="generate-container">
       <div class="generate-form">
+        <div class="type-switch" style="margin-bottom:12px">
+          <button class="type-switch-btn ${!isVideo ? 'active' : ''}" data-mode="image">🖼️ 图片生成</button>
+          <button class="type-switch-btn ${isVideo ? 'active' : ''}" data-mode="video">🎬 视频生成</button>
+        </div>
+
         <div class="type-switch">
-          <button class="type-switch-btn ${state.generateType === 'text-to-image' ? 'active' : ''}" data-type="text-to-image">✨ 文生图</button>
-          <button class="type-switch-btn ${state.generateType === 'image-to-image' ? 'active' : ''}" data-type="image-to-image">🖼️ 图生图</button>
+          ${isVideo ? `
+            <button class="type-switch-btn ${state.generateType === 'text-to-video' ? 'active' : ''}" data-type="text-to-video">✨ 文生视频</button>
+            <button class="type-switch-btn ${state.generateType === 'image-to-video' ? 'active' : ''}" data-type="image-to-video">🎞️ 图生视频</button>
+          ` : `
+            <button class="type-switch-btn ${state.generateType === 'text-to-image' ? 'active' : ''}" data-type="text-to-image">✨ 文生图</button>
+            <button class="type-switch-btn ${state.generateType === 'image-to-image' ? 'active' : ''}" data-type="image-to-image">🖼️ 图生图</button>
+          `}
         </div>
 
         <div class="form-group">
           <label>提示词 *</label>
-          <textarea id="gen-prompt" rows="4" placeholder="描述你想生成的图片内容，越详细效果越好..."></textarea>
+          <textarea id="gen-prompt" rows="4" placeholder="${isVideo ? '描述你想生成的视频内容，包括场景、动作、镜头运动等...' : '描述你想生成的图片内容，越详细效果越好...'}"></textarea>
         </div>
 
-        <div id="image-upload-section" style="display:${state.generateType === 'image-to-image' ? 'block' : 'none'}">
+        <div id="image-upload-section" style="display:${(isVideo && state.generateType === 'image-to-video') || (!isVideo && state.generateType === 'image-to-image') ? 'block' : 'none'}">
           <div class="form-group">
-            <label>参考图片 * (最多14张)</label>
+            <label>参考图片 * ${isVideo ? '(1-2张，首帧+可选尾帧)' : '(最多14张)'}</label>
             <div class="upload-area" id="upload-area">
               <div class="upload-icon">📤</div>
-              <p>点击或拖拽上传图片</p>
-              <input type="file" id="file-input" multiple accept="image/*" style="display:none">
+              <p>${isVideo ? '点击或拖拽上传图片（首帧，可选尾帧）' : '点击或拖拽上传图片'}</p>
+              <input type="file" id="file-input" ${isVideo ? '' : 'multiple'} accept="image/*" style="display:none">
             </div>
             <div class="upload-preview-grid" id="upload-preview"></div>
           </div>
@@ -443,52 +458,87 @@ function renderGenerate(container) {
           <div class="form-group">
             <label>画面比例</label>
             <select id="gen-aspect">
-              <option value="1:1" ${state.settings.default_aspect_ratio === '1:1' ? 'selected' : ''}>1:1 正方形</option>
-              <option value="16:9" ${state.settings.default_aspect_ratio === '16:9' ? 'selected' : ''}>16:9 宽屏</option>
-              <option value="9:16" ${state.settings.default_aspect_ratio === '9:16' ? 'selected' : ''}>9:16 竖屏</option>
-              <option value="4:3" ${state.settings.default_aspect_ratio === '4:3' ? 'selected' : ''}>4:3 标准</option>
-              <option value="3:4" ${state.settings.default_aspect_ratio === '3:4' ? 'selected' : ''}>3:4 竖版</option>
-              <option value="3:2" ${state.settings.default_aspect_ratio === '3:2' ? 'selected' : ''}>3:2 横版</option>
-              <option value="2:3" ${state.settings.default_aspect_ratio === '2:3' ? 'selected' : ''}>2:3 竖版</option>
-              <option value="4:5" ${state.settings.default_aspect_ratio === '4:5' ? 'selected' : ''}>4:5</option>
-              <option value="5:4" ${state.settings.default_aspect_ratio === '5:4' ? 'selected' : ''}>5:4</option>
-              <option value="21:9" ${state.settings.default_aspect_ratio === '21:9' ? 'selected' : ''}>21:9 超宽</option>
-              <option value="1:4" ${state.settings.default_aspect_ratio === '1:4' ? 'selected' : ''}>1:4 长条</option>
-              <option value="4:1" ${state.settings.default_aspect_ratio === '4:1' ? 'selected' : ''}>4:1 横条</option>
-              <option value="1:8" ${state.settings.default_aspect_ratio === '1:8' ? 'selected' : ''}>1:8 极窄</option>
-              <option value="8:1" ${state.settings.default_aspect_ratio === '8:1' ? 'selected' : ''}>8:1 极宽</option>
+              ${isVideo ? `
+                <option value="16:9" ${state.settings.default_aspect_ratio === '16:9' ? 'selected' : ''}>16:9 宽屏</option>
+                <option value="9:16" ${state.settings.default_aspect_ratio === '9:16' ? 'selected' : ''}>9:16 竖屏</option>
+                <option value="1:1" ${state.settings.default_aspect_ratio === '1:1' ? 'selected' : ''}>1:1 正方形</option>
+              ` : `
+                <option value="1:1" ${state.settings.default_aspect_ratio === '1:1' ? 'selected' : ''}>1:1 正方形</option>
+                <option value="16:9" ${state.settings.default_aspect_ratio === '16:9' ? 'selected' : ''}>16:9 宽屏</option>
+                <option value="9:16" ${state.settings.default_aspect_ratio === '9:16' ? 'selected' : ''}>9:16 竖屏</option>
+                <option value="4:3" ${state.settings.default_aspect_ratio === '4:3' ? 'selected' : ''}>4:3 标准</option>
+                <option value="3:4" ${state.settings.default_aspect_ratio === '3:4' ? 'selected' : ''}>3:4 竖版</option>
+                <option value="3:2" ${state.settings.default_aspect_ratio === '3:2' ? 'selected' : ''}>3:2 横版</option>
+                <option value="2:3" ${state.settings.default_aspect_ratio === '2:3' ? 'selected' : ''}>2:3 竖版</option>
+                <option value="4:5" ${state.settings.default_aspect_ratio === '4:5' ? 'selected' : ''}>4:5</option>
+                <option value="5:4" ${state.settings.default_aspect_ratio === '5:4' ? 'selected' : ''}>5:4</option>
+                <option value="21:9" ${state.settings.default_aspect_ratio === '21:9' ? 'selected' : ''}>21:9 超宽</option>
+                <option value="1:4" ${state.settings.default_aspect_ratio === '1:4' ? 'selected' : ''}>1:4 长条</option>
+                <option value="4:1" ${state.settings.default_aspect_ratio === '4:1' ? 'selected' : ''}>4:1 横条</option>
+                <option value="1:8" ${state.settings.default_aspect_ratio === '1:8' ? 'selected' : ''}>1:8 极窄</option>
+                <option value="8:1" ${state.settings.default_aspect_ratio === '8:1' ? 'selected' : ''}>8:1 极宽</option>
+              `}
             </select>
           </div>
-          <div class="form-group">
-            <label>画质</label>
-            <select id="gen-resolution">
-              <option value="0.5k" ${state.settings.default_resolution === '0.5k' ? 'selected' : ''}>0.5K 快速预览</option>
-              <option value="1k" ${state.settings.default_resolution === '1k' ? 'selected' : ''}>1K 标准</option>
-              <option value="2k" ${state.settings.default_resolution === '2k' ? 'selected' : ''}>2K 高清</option>
-              <option value="4k" ${state.settings.default_resolution === '4k' ? 'selected' : ''}>4K 超高清</option>
-            </select>
-          </div>
+          ${isVideo ? `
+            <div class="form-group">
+              <label>视频时长</label>
+              <select id="gen-duration">
+                <option value="5" selected>5秒</option>
+                <option value="10">10秒</option>
+              </select>
+            </div>
+          ` : `
+            <div class="form-group">
+              <label>画质</label>
+              <select id="gen-resolution">
+                <option value="0.5k" ${state.settings.default_resolution === '0.5k' ? 'selected' : ''}>0.5K 快速预览</option>
+                <option value="1k" ${state.settings.default_resolution === '1k' ? 'selected' : ''}>1K 标准</option>
+                <option value="2k" ${state.settings.default_resolution === '2k' ? 'selected' : ''}>2K 高清</option>
+                <option value="4k" ${state.settings.default_resolution === '4k' ? 'selected' : ''}>4K 超高清</option>
+              </select>
+            </div>
+          `}
         </div>
 
-        <div class="option-row">
-          <div class="form-group">
-            <label>输出格式</label>
-            <select id="gen-format">
-              <option value="png" ${state.settings.default_output_format === 'png' ? 'selected' : ''}>PNG</option>
-              <option value="jpeg" ${state.settings.default_output_format === 'jpeg' ? 'selected' : ''}>JPEG</option>
-            </select>
+        ${isVideo ? `
+          <div class="option-row">
+            <div class="form-group">
+              <label>提示词引导强度</label>
+              <select id="gen-guidance-scale">
+                <option value="0.3">0.3 创意发挥</option>
+                <option value="0.5" selected>0.5 平衡</option>
+                <option value="0.7">0.7 严格遵循</option>
+              </select>
+            </div>
+            ${state.generateType === 'image-to-video' ? `
+              <div class="form-group">
+                <label>负面提示词</label>
+                <input type="text" id="gen-negative-prompt" placeholder="不希望出现的内容（可选）">
+              </div>
+            ` : ''}
           </div>
-          <div class="form-group">
-            <label>联网搜索</label>
-            <select id="gen-web-search">
-              <option value="false">关闭</option>
-              <option value="true">开启</option>
-            </select>
+        ` : `
+          <div class="option-row">
+            <div class="form-group">
+              <label>输出格式</label>
+              <select id="gen-format">
+                <option value="png" ${state.settings.default_output_format === 'png' ? 'selected' : ''}>PNG</option>
+                <option value="jpeg" ${state.settings.default_output_format === 'jpeg' ? 'selected' : ''}>JPEG</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>联网搜索</label>
+              <select id="gen-web-search">
+                <option value="false">关闭</option>
+                <option value="true">开启</option>
+              </select>
+            </div>
           </div>
-        </div>
+        `}
 
         <button class="btn btn-primary" id="gen-submit" ${state.generating ? 'disabled' : ''}>
-          ${state.generating ? '⏳ 生成中...' : '🚀 开始生成'}
+          ${state.generating ? '⏳ 生成中...' : isVideo ? '🎬 开始生成视频' : '🚀 开始生成'}
         </button>
       </div>
 
@@ -498,21 +548,38 @@ function renderGenerate(container) {
           ${state.generating ? `
             <div class="loading-overlay">
               <div class="loading-spinner"></div>
-              <p>图片生成中，请稍候...</p>
+              <p>${isVideo ? '视频生成中，可能需要几分钟...' : '图片生成中，请稍候...'}</p>
             </div>
           ` : `
-            <div class="result-icon">🖼️</div>
-            <p>生成的图片将在这里显示</p>
+            <div class="result-icon">${isVideo ? '🎬' : '🖼️'}</div>
+            <p>${isVideo ? '生成的视频将在这里显示' : '生成的图片将在这里显示'}</p>
           `}
         </div>
       </div>
     </div>
   `;
 
-  // 绑定事件
-  container.querySelectorAll('.type-switch-btn').forEach(btn => {
+  // 绑定模式切换（图片/视频）
+  container.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      state.generateMode = mode;
+      // 切换模式时重置生成类型
+      if (mode === 'video') {
+        state.generateType = 'text-to-video';
+      } else {
+        state.generateType = 'text-to-image';
+      }
+      state.uploadFiles = [];
+      renderGenerate(container);
+    });
+  });
+
+  // 绑定类型切换
+  container.querySelectorAll('.type-switch-btn[data-type]').forEach(btn => {
     btn.addEventListener('click', () => {
       state.generateType = btn.dataset.type;
+      state.uploadFiles = [];
       renderGenerate(container);
     });
   });
@@ -538,8 +605,10 @@ function renderGenerate(container) {
 }
 
 function handleFiles(files) {
+  const isVideo = state.generateMode === 'video';
+  const maxFiles = isVideo ? 2 : 14;
   for (const f of files) {
-    if (state.uploadFiles.length >= 14) break;
+    if (state.uploadFiles.length >= maxFiles) break;
     if (f.type.startsWith('image/')) {
       state.uploadFiles.push(f);
     }
@@ -553,6 +622,7 @@ function renderUploadPreview() {
   preview.innerHTML = state.uploadFiles.map((f, i) => `
     <div class="upload-preview-item">
       <img src="${URL.createObjectURL(f)}" alt="">
+      ${state.generateMode === 'video' ? `<div class="frame-label">${i === 0 ? '首帧' : '尾帧'}</div>` : ''}
       <button class="remove-btn" data-index="${i}">×</button>
     </div>
   `).join('');
@@ -568,42 +638,70 @@ async function handleGenerate() {
   const prompt = document.getElementById('gen-prompt').value.trim();
   if (!prompt) { showToast('请输入提示词', 'warning'); return; }
 
-  if (state.generateType === 'image-to-image' && state.uploadFiles.length === 0) {
+  const isVideo = state.generateMode === 'video';
+
+  if ((state.generateType === 'image-to-image' || state.generateType === 'image-to-video') && state.uploadFiles.length === 0) {
     showToast('请上传参考图片', 'warning');
     return;
   }
-
-  // 在重新渲染前先读取所有参数值，避免渲染后select被重置
-  const params = {
-    aspect_ratio: document.getElementById('gen-aspect').value,
-    resolution: document.getElementById('gen-resolution').value,
-    output_format: document.getElementById('gen-format').value,
-    enable_web_search: document.getElementById('gen-web-search').value === 'true'
-  };
 
   state.generating = true;
   renderGenerate(document.getElementById('page-content'));
 
   try {
-    if (state.generateType === 'text-to-image') {
-      const res = await api('POST', '/tasks/text-to-image', {
-        prompt,
-        ...params
-      });
-      showToast('任务已提交，正在生成...', 'info');
-      pollTaskStatus(res.taskId);
-    } else {
-      const formData = new FormData();
-      formData.append('prompt', prompt);
-      formData.append('aspect_ratio', params.aspect_ratio);
-      formData.append('resolution', params.resolution);
-      formData.append('output_format', params.output_format);
-      formData.append('enable_web_search', params.enable_web_search);
-      state.uploadFiles.forEach(f => formData.append('images', f));
+    if (isVideo) {
+      // 视频生成
+      const videoParams = {
+        aspect_ratio: document.getElementById('gen-aspect').value,
+        duration: document.getElementById('gen-duration').value,
+        guidance_scale: document.getElementById('gen-guidance-scale').value
+      };
+      const negativePrompt = document.getElementById('gen-negative-prompt');
+      if (negativePrompt) videoParams.negative_prompt = negativePrompt.value;
 
-      const res = await api('POST', '/tasks/image-to-image', formData, true);
-      showToast('任务已提交，正在生成...', 'info');
-      pollTaskStatus(res.taskId);
+      if (state.generateType === 'text-to-video') {
+        const res = await api('POST', '/tasks/text-to-video', { prompt, ...videoParams });
+        showToast('视频任务已提交，正在生成...', 'info');
+        pollTaskStatus(res.taskId, true);
+      } else {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('aspect_ratio', videoParams.aspect_ratio);
+        formData.append('duration', videoParams.duration);
+        formData.append('guidance_scale', videoParams.guidance_scale);
+        if (videoParams.negative_prompt) formData.append('negative_prompt', videoParams.negative_prompt);
+        state.uploadFiles.forEach(f => formData.append('images', f));
+
+        const res = await api('POST', '/tasks/image-to-video', formData, true);
+        showToast('视频任务已提交，正在生成...', 'info');
+        pollTaskStatus(res.taskId, true);
+      }
+    } else {
+      // 图片生成
+      const params = {
+        aspect_ratio: document.getElementById('gen-aspect').value,
+        resolution: document.getElementById('gen-resolution').value,
+        output_format: document.getElementById('gen-format').value,
+        enable_web_search: document.getElementById('gen-web-search').value === 'true'
+      };
+
+      if (state.generateType === 'text-to-image') {
+        const res = await api('POST', '/tasks/text-to-image', { prompt, ...params });
+        showToast('任务已提交，正在生成...', 'info');
+        pollTaskStatus(res.taskId);
+      } else {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('aspect_ratio', params.aspect_ratio);
+        formData.append('resolution', params.resolution);
+        formData.append('output_format', params.output_format);
+        formData.append('enable_web_search', params.enable_web_search);
+        state.uploadFiles.forEach(f => formData.append('images', f));
+
+        const res = await api('POST', '/tasks/image-to-image', formData, true);
+        showToast('任务已提交，正在生成...', 'info');
+        pollTaskStatus(res.taskId);
+      }
     }
   } catch (err) {
     state.generating = false;
@@ -612,8 +710,8 @@ async function handleGenerate() {
   }
 }
 
-async function pollTaskStatus(taskId) {
-  const maxAttempts = 80;
+async function pollTaskStatus(taskId, isVideo) {
+  const maxAttempts = isVideo ? 120 : 80;
   let attempts = 0;
 
   const interval = setInterval(async () => {
@@ -631,7 +729,7 @@ async function pollTaskStatus(taskId) {
       if (task.status === 'completed') {
         clearInterval(interval);
         state.generating = false;
-        showToast('图片生成成功！', 'success');
+        showToast(isVideo ? '视频生成成功！' : '图片生成成功！', 'success');
         showResult(task);
       } else if (task.status === 'failed') {
         clearInterval(interval);
@@ -649,23 +747,31 @@ function showResult(task) {
   const resultArea = document.getElementById('result-area');
   if (!resultArea) return;
 
-  let images = [];
-  try { images = JSON.parse(task.output_images || '[]'); } catch {}
+  let outputs = [];
+  try { outputs = JSON.parse(task.output_images || '[]'); } catch {}
 
-  if (images.length === 0) {
-    resultArea.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>未获取到图片</p></div>`;
+  if (outputs.length === 0) {
+    resultArea.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>未获取到结果</p></div>`;
     return;
   }
+
+  const isVideoTask = task.type === 'text-to-video' || task.type === 'image-to-video';
 
   resultArea.className = 'result-area';
   resultArea.innerHTML = `
     <div class="result-images">
-      ${images.map(url => `
-        <div class="result-image-item">
+      ${outputs.map(url => {
+        if (isVideoTask || url.endsWith('.mp4') || url.includes('video')) {
+          return `<div class="result-video-item">
+            <video src="${url}" controls preload="metadata"></video>
+            <a class="download-btn" href="${url}" download target="_blank">📥 下载视频</a>
+          </div>`;
+        }
+        return `<div class="result-image-item">
           <img src="${url}" alt="生成结果" onclick="viewImage('${url}')">
           <a class="download-btn" href="${url}" download target="_blank">下载</a>
-        </div>
-      `).join('')}
+        </div>`;
+      }).join('')}
     </div>
     <div style="margin-top:16px;text-align:center">
       <button class="btn btn-ghost btn-sm" onclick="state.generating=false;renderGenerate(document.getElementById('page-content'))">继续生成</button>
@@ -714,6 +820,8 @@ async function renderTasks(container) {
         <option value="">全部类型</option>
         <option value="text-to-image">文生图</option>
         <option value="image-to-image">图生图</option>
+        <option value="text-to-video">文生视频</option>
+        <option value="image-to-video">图生视频</option>
       </select>
       <button class="btn btn-secondary btn-sm" id="refresh-tasks">刷新</button>
     </div>
@@ -744,14 +852,15 @@ async function renderTasks(container) {
               let outputImages = [];
               try { outputImages = JSON.parse(t.output_images || '[]'); } catch {}
               const thumb = outputImages.length > 0 ? outputImages[0] : null;
+              const videoType = isVideoType(t.type);
               return `
               <tr>
                 <td>#${t.id}</td>
-                <td>${thumb ? `<img src="${thumb}" class="task-thumb" onclick="viewImage('${thumb}')">` : '<span style="color:var(--dark-light);font-size:12px">无</span>'}</td>
-                <td><span class="type-badge ${t.type}">${t.type === 'text-to-image' ? '文生图' : '图生图'}</span></td>
+                <td>${thumb ? (videoType || thumb.endsWith('.mp4') ? `<div class="task-thumb-wrap"><video src="${thumb}" class="task-thumb" muted preload="metadata" onmouseover="this.play()" onmouseout="this.pause()"></video><div class="thumb-play-icon"></div></div>` : `<img src="${thumb}" class="task-thumb" onclick="viewImage('${thumb}')">`) : '<span style="color:var(--dark-light);font-size:12px">无</span>'}</td>
+                <td><span class="type-badge ${t.type}">${typeText(t.type)}</span></td>
                 <td><div class="prompt-preview">${escapeHtml(t.prompt)}</div></td>
                 <td>${t.aspect_ratio}</td>
-                <td>${t.resolution.toUpperCase()}</td>
+                <td>${videoType ? (t.duration || '5') + '秒' : t.resolution.toUpperCase()}</td>
                 <td><span class="status-badge ${t.status}">${statusText(t.status)}</span></td>
                 <td>${formatDate(t.created_at)}</td>
                 <td class="task-actions">
@@ -830,22 +939,23 @@ async function renderTasks(container) {
 async function downloadTaskImages(taskId) {
   try {
     const task = await api('GET', `/tasks/${taskId}`);
-    let images = [];
-    try { images = JSON.parse(task.output_images || '[]'); } catch {}
-    if (images.length === 0) {
-      showToast('没有可下载的图片', 'warning');
+    let outputs = [];
+    try { outputs = JSON.parse(task.output_images || '[]'); } catch {}
+    if (outputs.length === 0) {
+      showToast('没有可下载的文件', 'warning');
       return;
     }
-    images.forEach((url, i) => {
+    const videoType = isVideoType(task.type);
+    outputs.forEach((url, i) => {
       const a = document.createElement('a');
       a.href = url;
-      a.download = `task-${taskId}-${i + 1}.png`;
+      a.download = videoType || url.endsWith('.mp4') ? `task-${taskId}-${i + 1}.mp4` : `task-${taskId}-${i + 1}.png`;
       a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
     });
-    showToast(`正在下载 ${images.length} 张图片`, 'success');
+    showToast(`正在下载 ${outputs.length} 个文件`, 'success');
   } catch (err) {
     showToast('下载失败: ' + err.message, 'error');
   }
@@ -857,10 +967,13 @@ async function regenerateTask(taskId) {
     const task = await api('GET', `/tasks/${taskId}`);
     if (!task) { showToast('任务不存在', 'error'); return; }
 
+    const videoType = isVideoType(task.type);
     state.generating = true;
+    state.generateMode = videoType ? 'video' : 'image';
     showToast('正在以相同参数重新生成...', 'info');
 
     if (task.type === 'text-to-image') {
+      state.generateType = 'text-to-image';
       const res = await api('POST', '/tasks/text-to-image', {
         prompt: task.prompt,
         aspect_ratio: task.aspect_ratio,
@@ -868,22 +981,29 @@ async function regenerateTask(taskId) {
         output_format: task.output_format
       });
       pollTaskStatus(res.taskId);
-    } else {
-      // 图生图需要重新上传图片
+    } else if (task.type === 'text-to-video') {
+      state.generateType = 'text-to-video';
+      const res = await api('POST', '/tasks/text-to-video', {
+        prompt: task.prompt,
+        aspect_ratio: task.aspect_ratio,
+        duration: task.duration || '5',
+        guidance_scale: task.guidance_scale || 0.5
+      });
+      pollTaskStatus(res.taskId, true);
+    } else if (task.type === 'image-to-video') {
+      state.generateType = 'image-to-video';
       let inputImages = [];
       try { inputImages = JSON.parse(task.input_images || '[]'); } catch {}
       if (inputImages.length === 0) {
-        showToast('图生图任务缺少参考图片，无法重新生成', 'warning');
+        showToast('图生视频任务缺少参考图片，无法重新生成', 'warning');
         state.generating = false;
         return;
       }
-      // 下载输入图片并重新上传
       const formData = new FormData();
       formData.append('prompt', task.prompt);
       formData.append('aspect_ratio', task.aspect_ratio);
-      formData.append('resolution', task.resolution);
-      formData.append('output_format', task.output_format);
-
+      formData.append('duration', task.duration || '5');
+      formData.append('guidance_scale', task.guidance_scale || 0.5);
       for (let i = 0; i < inputImages.length; i++) {
         try {
           const resp = await fetch(inputImages[i]);
@@ -895,7 +1015,33 @@ async function regenerateTask(taskId) {
           return;
         }
       }
-
+      const res = await api('POST', '/tasks/image-to-video', formData, true);
+      pollTaskStatus(res.taskId, true);
+    } else {
+      // 图生图需要重新上传图片
+      let inputImages = [];
+      try { inputImages = JSON.parse(task.input_images || '[]'); } catch {}
+      if (inputImages.length === 0) {
+        showToast('图生图任务缺少参考图片，无法重新生成', 'warning');
+        state.generating = false;
+        return;
+      }
+      const formData = new FormData();
+      formData.append('prompt', task.prompt);
+      formData.append('aspect_ratio', task.aspect_ratio);
+      formData.append('resolution', task.resolution);
+      formData.append('output_format', task.output_format);
+      for (let i = 0; i < inputImages.length; i++) {
+        try {
+          const resp = await fetch(inputImages[i]);
+          const blob = await resp.blob();
+          formData.append('images', blob, `image-${i}.png`);
+        } catch {
+          showToast('参考图片下载失败，无法重新生成', 'error');
+          state.generating = false;
+          return;
+        }
+      }
       const res = await api('POST', '/tasks/image-to-image', formData, true);
       pollTaskStatus(res.taskId);
     }
@@ -908,10 +1054,12 @@ async function regenerateTask(taskId) {
 async function showTaskDetail(taskId) {
   try {
     const task = await api('GET', `/tasks/${taskId}`);
-    let images = [];
-    try { images = JSON.parse(task.output_images || '[]'); } catch {}
+    let outputs = [];
+    try { outputs = JSON.parse(task.output_images || '[]'); } catch {}
     let inputImages = [];
     try { inputImages = JSON.parse(task.input_images || '[]'); } catch {}
+
+    const videoType = isVideoType(task.type);
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -920,7 +1068,7 @@ async function showTaskDetail(taskId) {
         <h2>任务详情 #${task.id}</h2>
         <div class="form-group">
           <label>类型</label>
-          <span class="type-badge ${task.type}">${task.type === 'text-to-image' ? '文生图' : '图生图'}</span>
+          <span class="type-badge ${task.type}">${typeText(task.type)}</span>
         </div>
         <div class="form-group">
           <label>提示词</label>
@@ -932,20 +1080,33 @@ async function showTaskDetail(taskId) {
             <p>${task.aspect_ratio}</p>
           </div>
           <div class="form-group">
-            <label>画质</label>
-            <p>${task.resolution.toUpperCase()}</p>
+            <label>${videoType ? '视频时长' : '画质'}</label>
+            <p>${videoType ? (task.duration || '5') + '秒' : task.resolution.toUpperCase()}</p>
           </div>
         </div>
-        <div class="option-row">
-          <div class="form-group">
-            <label>输出格式</label>
-            <p>${task.output_format.toUpperCase()}</p>
+        ${videoType ? `
+          <div class="option-row">
+            <div class="form-group">
+              <label>引导强度</label>
+              <p>${task.guidance_scale || 0.5}</p>
+            </div>
+            <div class="form-group">
+              <label>状态</label>
+              <span class="status-badge ${task.status}">${statusText(task.status)}</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label>状态</label>
-            <span class="status-badge ${task.status}">${statusText(task.status)}</span>
+        ` : `
+          <div class="option-row">
+            <div class="form-group">
+              <label>输出格式</label>
+              <p>${task.output_format.toUpperCase()}</p>
+            </div>
+            <div class="form-group">
+              <label>状态</label>
+              <span class="status-badge ${task.status}">${statusText(task.status)}</span>
+            </div>
           </div>
-        </div>
+        `}
         ${task.inference_time ? `<p style="font-size:12px;color:var(--dark-light)">推理耗时: ${(task.inference_time / 1000).toFixed(1)}秒</p>` : ''}
         ${inputImages.length > 0 ? `
           <div style="margin-top:16px">
@@ -955,11 +1116,16 @@ async function showTaskDetail(taskId) {
             </div>
           </div>
         ` : ''}
-        ${images.length > 0 ? `
+        ${outputs.length > 0 ? `
           <div style="margin-top:16px">
             <label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px">生成结果</label>
             <div class="task-output-images">
-              ${images.map(url => `<img src="${url}" alt="输出图片" onclick="viewImage('${url}')">`).join('')}
+              ${outputs.map(url => {
+                if (videoType || url.endsWith('.mp4') || url.includes('video')) {
+                  return `<video src="${url}" controls preload="metadata"></video>`;
+                }
+                return `<img src="${url}" alt="输出结果" onclick="viewImage('${url}')">`;
+              }).join('')}
             </div>
           </div>
         ` : ''}
@@ -995,6 +1161,8 @@ async function renderStats(container) {
   const processing = s.byStatus?.find(x => x.status === 'processing')?.count || 0;
   const t2i = s.byType?.find(x => x.type === 'text-to-image')?.count || 0;
   const i2i = s.byType?.find(x => x.type === 'image-to-image')?.count || 0;
+  const t2v = s.byType?.find(x => x.type === 'text-to-video')?.count || 0;
+  const i2v = s.byType?.find(x => x.type === 'image-to-video')?.count || 0;
 
   container.innerHTML = `
     <div class="page-header">
@@ -1051,6 +1219,18 @@ async function renderStats(container) {
             <div class="bar-label">图生图</div>
             <div class="bar-track">
               <div class="bar-fill pink" style="width:${s.total ? (i2i / s.total * 100) : 0}%">${i2i}</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">文生视频</div>
+            <div class="bar-track">
+              <div class="bar-fill cyan" style="width:${s.total ? (t2v / s.total * 100) : 0}%">${t2v}</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">图生视频</div>
+            <div class="bar-track">
+              <div class="bar-fill yellow" style="width:${s.total ? (i2v / s.total * 100) : 0}%">${i2v}</div>
             </div>
           </div>
         </div>
@@ -1125,6 +1305,8 @@ async function renderAllTasks(container) {
         <option value="">全部类型</option>
         <option value="text-to-image">文生图</option>
         <option value="image-to-image">图生图</option>
+        <option value="text-to-video">文生视频</option>
+        <option value="image-to-video">图生视频</option>
       </select>
       <input type="text" id="admin-search" placeholder="搜索提示词...">
       <button class="btn btn-secondary btn-sm" id="admin-search-btn">搜索</button>
@@ -1152,19 +1334,21 @@ async function renderAllTasks(container) {
             </tr>
           </thead>
           <tbody>
-            ${state.allTasks.map(t => `
+            ${state.allTasks.map(t => {
+              const videoType = isVideoType(t.type);
+              return `
               <tr>
                 <td>#${t.id}</td>
                 <td>${escapeHtml(t.username || '')}</td>
-                <td><span class="type-badge ${t.type}">${t.type === 'text-to-image' ? '文生图' : '图生图'}</span></td>
+                <td><span class="type-badge ${t.type}">${typeText(t.type)}</span></td>
                 <td><div class="prompt-preview">${escapeHtml(t.prompt)}</div></td>
                 <td>${t.aspect_ratio}</td>
-                <td>${t.resolution.toUpperCase()}</td>
+                <td>${videoType ? (t.duration || '5') + '秒' : t.resolution.toUpperCase()}</td>
                 <td><span class="status-badge ${t.status}">${statusText(t.status)}</span></td>
                 <td>${formatDate(t.created_at)}</td>
                 <td><button class="btn btn-sm btn-ghost admin-view-btn" data-id="${t.id}">查看</button></td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
       </div>
@@ -1627,6 +1811,15 @@ function escapeHtml(str) {
 function statusText(status) {
   const map = { pending: '等待中', processing: '处理中', completed: '已完成', failed: '失败', timeout: '异常' };
   return map[status] || status;
+}
+
+function typeText(type) {
+  const map = { 'text-to-image': '文生图', 'image-to-image': '图生图', 'text-to-video': '文生视频', 'image-to-video': '图生视频' };
+  return map[type] || type;
+}
+
+function isVideoType(type) {
+  return type === 'text-to-video' || type === 'image-to-video';
 }
 
 function formatDate(dateStr) {
